@@ -1,0 +1,68 @@
+Background:
+  SolidBackground:
+    Color: rgb [0.15, 0.15, 0.15]
+Materials:
+- EmissiveMaterial:
+    Color: rgb [ 2, 2, 2 ]
+    Name: glow
+- LambertianMaterial:
+    Color: rgb [0.627, 0.627, 0.627]
+    Name: ground
+- SchlickMaterial:
+    High:
+      LambertianMaterial:
+          Color: rgb [0.1, 0.99, 0.99]
+    Low:
+      ReflectMaterial:
+        Color: rgb [0.99, 0.99, 0.99]
+        Scatter: 0.02
+    Ior: 1.5
+    Name: object
+Drawables:
+- Sphere:
+    Position: vec [0, 0, 0]
+    Radius: 15
+    Material: object
+- Sphere:
+    Position: vec [40, 0, 0]
+    Radius: 15
+    Material: object
+- Sphere:
+    Position: vec [-40, 0, 0]
+    Radius: 15
+    Material: object
+- Sphere:
+    Position: vec [0, 0, 40]
+    Radius: 15
+    Material: object
+- Sphere:
+    Position: vec [0, 0, -40]
+    Radius: 15
+    Material: object
+- Sphere:
+    Position: vec [0, 600, 0]
+    Radius: 250
+    Material: glow
+- Sphere:
+    Position: vec [-600, 600, -600]
+    Radius: 250
+    Material: glow
+- Sphere:
+    Position: vec [600, 600, 600]
+    Radius: 250
+    Material: glow
+- InfinitePlane:
+    Position: vec [0, -15.01, 0]
+    Normal: vec [0, 1, 0]
+    Material: ground
+Camera:
+  TargetCamera:
+    Position: vec [-120, 120, -70]
+    Target: vec [0, 2, 0]
+    Up: vec [0, 1, 0]
+    FieldOfView: 36
+    Blur: 0
+    BlockWidth: 32
+    BlockHeight: 32
+    PixelHeight: 300
+    Ratio: 1.2

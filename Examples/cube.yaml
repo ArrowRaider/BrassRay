@@ -1,0 +1,45 @@
+Background:
+  SkyBackground:
+    HighColor: rgb [0.706, 0.835, 1]
+    LowColor: rgb [1, 0.835, 0.706]
+    SunColor: rgb [3.7, 3.7, 3.7]
+    SunFalloff: 120
+    SunDirection: vec [0.391, 0.651, 0.651]
+Materials:
+- SchlickMaterial:
+    High:
+      RefractMaterial:
+        Color: rgb [0.923, 0.874, 0.031]
+        Ior: 1.5
+        Scatter: 0.02
+    Low:
+      ReflectMaterial:
+        Color: rgb [0.98, 0.98, 0.98]
+        Scatter: 0.02
+    Ior: 1.5
+    Name: mat1
+- LambertianMaterial:
+    Color: rgb [0.627, 0.627, 0.627]
+    Name: ground
+Drawables:
+- Box:
+    Position: vec [0, 0, 0]
+    Width: 30
+    Height: 30
+    Depth: 30
+    Material: mat1
+- InfinitePlane:
+    Position: vec [0, -15.01, 0]
+    Normal: vec [0, 1, 0]
+    Material: ground
+Camera:
+  TargetCamera:
+    Position: vec [-60, 60, -40]
+    Target: vec [0, 0, 0]
+    Up: vec [0, 1, 0]
+    FieldOfView: 50
+    Blur: 0.1
+    BlockWidth: 32
+    BlockHeight: 32
+    PixelHeight: 200
+    Ratio: 1.6

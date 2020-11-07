@@ -1,0 +1,172 @@
+Background:
+  SkyBackground:
+    HighColor: rgb [0.706, 0.835, 1]
+    LowColor: rgb [1, 0.835, 0.706]
+    SunColor: rgb [3.5, 3.5, 3.5]
+    SunFalloff: 120
+    SunDirection: vec [0.391, 0.651, 0.651]
+Materials:
+- SchlickMaterial:
+    High:
+      RefractMaterial:
+        Color: rgb [0.941, 0.0784, 0.941]
+        Ior: 1.5
+        Scatter: 0.02
+    Low:
+      ReflectMaterial:
+        Color: rgb [0.98, 0.98, 0.98]
+        Scatter: 0.02
+    Ior: 1.5
+    Name: mat1
+- SchlickMaterial:
+    High:
+      RefractMaterial:
+        Color: rgb [0.0784, 0.0784, 0.941]
+        Ior: 1.5
+        Scatter: 0.02
+    Low:
+      ReflectMaterial:
+        Color: rgb [0.98, 0.98, 0.98]
+        Scatter: 0.02
+    Ior: 1.5
+    Name: mat2
+- SchlickMaterial:
+    High:
+      RefractMaterial:
+        Color: rgb [0.941, 0.0784, 0.0784]
+        Ior: 1.5
+        Scatter: 0.02
+    Low:
+      ReflectMaterial:
+        Color: rgb [0.98, 0.98, 0.98]
+        Scatter: 0.02
+    Ior: 1.5
+    Name: mat3
+- SchlickMaterial:
+    High:
+      RefractMaterial:
+        Color: rgb [0.0784, 0.941, 0.0784]
+        Ior: 1.5
+        Scatter: 0.02
+    Low:
+      ReflectMaterial:
+        Color: rgb [0.98, 0.98, 0.98]
+        Scatter: 0.02
+    Ior: 1.5
+    Name: mat4
+- SchlickMaterial:
+    High:
+      RefractMaterial:
+        Color: rgb [0.0784, 0.941, 0.941]
+        Ior: 1.5
+        Scatter: 0.02
+    Low:
+      ReflectMaterial:
+        Color: rgb [0.98, 0.98, 0.98]
+        Scatter: 0.02
+    Ior: 1.5
+    Name: mat5
+- SchlickMaterial:
+    High:
+      RefractMaterial:
+        Color: rgb [0.941, 0.941, 0.0784]
+        Ior: 1.5
+        Scatter: 0.02
+    Low:
+      ReflectMaterial:
+        Color: rgb [0.98, 0.98, 0.98]
+        Scatter: 0.02
+    Ior: 1.5
+    Name: mat6
+- SchlickMaterial:
+    High:
+      RefractMaterial:
+        Color: rgb [0.808, 0.808, 0.808]
+        Ior: 1.5
+        Scatter: 0.02
+    Low:
+      ReflectMaterial:
+        Color: rgb [0.98, 0.98, 0.98]
+        Scatter: 0.02
+    Ior: 1.5
+    Name: mat7
+- SchlickMaterial:
+    High:
+      ReflectMaterial:
+        Color: rgb [0.808, 0.808, 0.808]
+        Scatter: 0.02
+    Low:
+      ReflectMaterial:
+        Color: rgb [0.98, 0.98, 0.98]
+        Scatter: 0.02
+    Ior: 2.5
+    Name: mat8
+- LambertianMaterial:
+    Color: rgb [0.627, 0.627, 0.627]
+    Name: mat9
+- SchlickMaterial:
+    High:
+      RefractMaterial:
+        Color: rgb [0.725, 0.478, 0.341]
+        Ior: 1.5
+        Scatter: 0.02
+    Low:
+      ReflectMaterial:
+        Color: rgb [0.98, 0.98, 0.98]
+        Scatter: 0.02
+    Ior: 1.2
+    Name: mat10
+Drawables:
+- Sphere:
+    Position: vec [14, -8, 10]
+    Radius: 6
+    Material: mat1
+- Sphere:
+    Position: vec [-14, -10, 6]
+    Radius: 4
+    Material: mat2
+- Sphere:
+    Position: vec [8, -8, 25]
+    Radius: 6
+    Material: mat3
+- Sphere:
+    Position: vec [-8, -8, 15]
+    Radius: 6
+    Material: mat4
+- Sphere:
+    Position: vec [0, -11, 4]
+    Radius: 3
+    Material: mat5
+- Sphere:
+    Position: vec [6, -2, 50]
+    Radius: 12
+    Material: mat6
+- Sphere:
+    Position: vec [-30, -6, 30]
+    Radius: 8
+    Material: mat7
+- Sphere:
+    Position: vec [50, 16, 70]
+    Radius: 30
+    Material: mat8
+- Box:
+    Position: vec [-40, 1, 90]
+    Width: 30
+    Height: 30
+    Depth: 30
+    Material: mat10
+- InfinitePlane:
+    Position: vec [0, -14.01, 0]
+    Normal: vec [0, 1, 0]
+    Material: mat9
+Camera:
+  TargetCamera:
+    Position: vec [-5, 5, -44]
+    Target: vec [0, 1, 19]
+    Up: vec [0, 1, 0]
+    FieldOfView: 50
+    Blur: 0.1
+    BlockWidth: 32
+    BlockHeight: 32
+    PixelHeight: 200
+    Ratio: 1.6
