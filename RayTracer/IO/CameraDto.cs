@@ -22,8 +22,17 @@ namespace BrassRay.RayTracer.IO
         public decimal Blur { get; set; }
     }
 
+    internal class OrthographicCameraDto : CameraDto
+    {
+        public Vector3 Position { get; set; }
+        public Vector3 Direction { get; set; }
+        public Vector3 Up { get; set; }
+        public float ViewHeight { get; set; }
+    }
+
     internal class CameraHolder
     {
         public TargetCameraDto TargetCamera { get; set; }
+        public OrthographicCameraDto OrthographicCamera { get; set; }
     }
 }

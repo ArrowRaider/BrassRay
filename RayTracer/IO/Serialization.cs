@@ -96,13 +96,16 @@ namespace BrassRay.RayTracer.IO
                     });
 
                 cfg.CreateMap<Camera, CameraDto>()
-                    .Include<TargetCamera, TargetCameraDto>().ReverseMap();
+                    .Include<TargetCamera, TargetCameraDto>()
+                    .Include<OrthographicCamera, OrthographicCameraDto>().ReverseMap();
                 cfg.CreateMap<TargetCamera, TargetCameraDto>().ReverseMap();
+                cfg.CreateMap<OrthographicCamera, OrthographicCameraDto>().ReverseMap();
                 cfg.CreateMap<Camera, CameraHolder>()
                     .ForMember(d => d.TargetCamera, o => o.MapFrom(s => s as TargetCamera))
+                    .ForMember(d => d.OrthographicCamera, o => o.MapFrom(s => s as OrthographicCamera))
                     .ReverseMap().ConvertUsing((s, d, c) =>
                     {
-                        var item = (CameraDto)s.TargetCamera;
+                        var item = s.TargetCamera ?? (CameraDto)s.OrthographicCamera;
                         return c.Mapper.Map(item, d);
                     });
 
