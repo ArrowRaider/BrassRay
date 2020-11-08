@@ -11,42 +11,11 @@ namespace BrassRay.RayTracer
     {
         public delegate void ProgressCallback(Vector3[,] shaded, int x, int y, int width, int height, int blockCount);
 
-        private int _pixelHeight = 200;
-        private int _pixelWidth = 200;
-        private float _ratio = 1.0f;
-
         public int BlockWidth { get; set; } = 32;
         public int BlockHeight { get; set; } = 32;
-
-        public int PixelHeight
-        {
-            get => _pixelHeight;
-            set
-            {
-                _pixelHeight = value;
-                _pixelWidth = (int)MathF.Round(_pixelHeight * Ratio);
-            }
-        }
-
-        public int PixelWidth
-        {
-            get => _pixelWidth;
-            set
-            {
-                _pixelWidth = value;
-                _pixelHeight = (int)MathF.Round(_pixelHeight / Ratio);
-            }
-        }
-
-        public float Ratio
-        {
-            get => _ratio;
-            set
-            {
-                _ratio = value;
-                _pixelWidth = (int)MathF.Round(_pixelHeight * Ratio);
-            }
-        }
+        public int PixelHeight { get; set; } = 200;
+        public int PixelWidth => (int)MathF.Round(PixelHeight * Ratio);
+        public float Ratio { get; set; } = 1.0f;
 
         protected abstract CoordinateSystem GetCoordinateSystem();
 
