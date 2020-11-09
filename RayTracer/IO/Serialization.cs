@@ -45,13 +45,11 @@ namespace BrassRay.RayTracer.IO
                     });
 
                 cfg.CreateMap<Drawable, DrawableDto>()
-                    .ForMember(d => d.Inside, o => o.MapFrom(s => s.Inside ? (bool?)true : null))
                     .ForMember(d => d.Material, o => o.MapFrom(s => s.Material.Name))
                     .Include<InfinitePlane, InfinitePlaneDto>()
                     .Include<Box, BoxDto>()
                     .Include<Sphere, SphereDto>()
-                    .ReverseMap().ForMember(d => d.Inside, o => o.MapFrom(s => s.Inside ?? false))
-                    .ForMember(d => d.Material, o => o.Ignore());
+                    .ReverseMap().ForMember(d => d.Material, o => o.Ignore());
                 cfg.CreateMap<InfinitePlane, InfinitePlaneDto>().ReverseMap();
                 cfg.CreateMap<Box, BoxDto>().ReverseMap();
                 cfg.CreateMap<Sphere, SphereDto>().ReverseMap();

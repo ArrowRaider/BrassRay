@@ -15,19 +15,23 @@ namespace BrassRay.RayTracer
             var halfB = Vector3.Dot(diff, ray.Direction);
             var c = Vector3.Dot(diff, diff) - Radius * Radius;
             var x = halfB * halfB - a * c;
-            if (x < 0.0f)
+            if (x < Utils.Epsilon)
                 return null;
-            if (ray.Inside)
+
+            var sx = MathF.Sqrt(x);
+            var t = (-halfB - sx) / a;
+            if (t < Utils.Epsilon)
             {
-                var t = (-halfB + MathF.Sqrt(x)) / a;
-                var n0 = ray.Position + ray.Direction * t;
-                return new Intersection(t, new Ray(n0, Position - n0, ray.Inside), this);
+                t = (-halfB + sx) / a;
+                if (t < Utils.Epsilon)
+                    return null;
+                var p = ray.Position + ray.Direction * t;
+                return new Intersection(t, p, Position - p, true, this);
             }
             else
             {
-                var t = (-halfB - MathF.Sqrt(x)) / a;
-                var n0 = ray.Position + ray.Direction * t;
-                return new Intersection(t, new Ray(n0, n0 - Position, ray.Inside), this);
+                var p = ray.Position + ray.Direction * t;
+                return new Intersection(t, p, p - Position, false, this);
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Numerics;
 
 namespace BrassRay.RayTracer
@@ -32,9 +33,9 @@ namespace BrassRay.RayTracer
         protected override Vector3 ShadeCore(Ray ray, Scene scene, Intersection p, int depth)
         {
             var d1 = new Vector3(0.0f, 0.0f, 1.0f);
-            var m1 = MathF.Max(0.0f, Vector3.Dot(p.Normal.Direction, d1));
+            var m1 = MathF.Max(0.0f, Vector3.Dot(p.Normal, d1));
             var d2 = new Vector3(2.0f, 1.0f, -1.0f);
-            var m2 = MathF.Max(0.0f, Vector3.Dot(p.Normal.Direction, d2));
+            var m2 = MathF.Max(0.0f, Vector3.Dot(p.Normal, d2));
             return (m1 * 0.6f + m2 * 0.4f) * Color;
         }
     }
@@ -48,9 +49,9 @@ namespace BrassRay.RayTracer
 
         protected override Vector3 ShadeCore(Ray ray, Scene scene, Intersection p, int depth)
         {
-            var from = p.Normal.PerturbRay();
-            var d = p.Normal.Direction + Utils.SphereRandom(RandomProvider.Random) * 2.0f;
-            return scene.Shade(new Ray(from.Position, d), depth - 1) * Color;
+            var from = p.Position + p.Normal * Utils.Epsilon;
+            var d = p.Normal + Utils.SphereRandom(RandomProvider.Random) * 2.0f;
+            return scene.Shade(new Ray(from, d), depth - 1) * Color;
         }
     }
 
@@ -64,11 +65,11 @@ namespace BrassRay.RayTracer
 
         protected override Vector3 ShadeCore(Ray ray, Scene scene, Intersection p, int depth)
         {
-            var from = p.Normal.PerturbRay();
-            var d = -2.0f * Vector3.Dot(ray.Direction, p.Normal.Direction) * p.Normal.Direction + ray.Direction;
+            var from = p.Position + p.Normal * Utils.Epsilon;
+            var d = -2.0f * Vector3.Dot(ray.Direction, p.Normal) * p.Normal + ray.Direction;
             if (Scatter > 0.0f)
                 d += Utils.SphereRandom(RandomProvider.Random) * Scatter;
-            return scene.Shade(new Ray(from.Position, d), depth - 1) * Color;
+            return scene.Shade(new Ray(from, d), depth - 1) * Color;
         }
     }
 
@@ -83,52 +84,32 @@ namespace BrassRay.RayTracer
 
         protected override Vector3 ShadeCore(Ray ray, Scene scene, Intersection p, int depth)
         {
-            if (depth <= 0)
-                return Vector3.Zero;
-
-            var from = p.Normal.PerturbRayNegative();
-            var d = Scatter > 0.0 ? Vector3.Normalize(ray.Direction + Utils.SphereRandom(RandomProvider.Random) * Scatter) : ray.Direction;
-            var rr = ray.Inside ? Ior : 1.0f / Ior;
-
-            var c = Vector3.Dot(p.Normal.Direction, d);
-            var s = 1 - rr * rr * (1 - c * c);
+            var from = p.Position - p.Normal * Utils.Epsilon;
+            var d = Scatter > 0.0f ? Vector3.Normalize(ray.Direction + Utils.SphereRandom(RandomProvider.Random) * Scatter) : ray.Direction;
+            var refRatio = p.Inside ? Ior : 1.0f / Ior;
+            var c = Vector3.Dot(p.Normal, d);
+            var s = 1 - refRatio * refRatio * (1 - c * c);
 
             // creating the secondary ray below
             Ray ray2;
-            if (s < 0.0f)
+            if (s < Utils.Epsilon)
             {
                 // total internal refraction
-                var d2 = -2.0f * Vector3.Dot(d, p.Normal.Direction) * p.Normal.Direction + d;
-                ray2 = new Ray(from.Position, d2, ray.Inside);
+                var d2 = -2.0f * Vector3.Dot(d, p.Normal) * p.Normal + d;
+                ray2 = new Ray(from, d2);
             }
             else
             {
                 // refract ray
-                var d2 = (rr * -c - MathF.Sqrt(s)) * p.Normal.Direction + rr * d;
-                ray2 = new Ray(from.Position, d2, !ray.Inside);
+                var d2 = (refRatio * -c - MathF.Sqrt(s)) * p.Normal + refRatio * d;
+                ray2 = new Ray(from, d2);
             }
 
-            // if the ray is outside, then continue scene shading from secondary ray
-            if (!ray2.Inside)
-                return scene.Shade(ray2, depth - 1);
-
-            // inside the object and need to find where the other end of it is
-            var p2 = p.Drawable.Intersect(ray2);
-            // need copy of ray without inside flag
-            var ray3 = new Ray(ray2.Position, ray2.Direction);
-            // need to check if there is another object between here and the other end of the current drawable
-            var p3 = scene.ClosestIntersection(ray3);
-
-            // condition:  the secondary ray hit nothing
-            if (!p2.HasValue && !p3.HasValue)
-                return scene.Background.Shade(ray2) * Color;
-
-            // condition:  the secondary ray hit an object that is NOT the current drawable
-            if (!p2.HasValue || p3.HasValue && p3.Value.T < p2.Value.T)
-                return scene.Shade(ray3, depth - 1) * Color;
-
-            // condition:  the secondary ray reached the other end of the current drawable, continue from there
-            return p2.Value.Drawable.Material.Shade(ray2, scene, p2.Value, depth) * Color;
+            // get shade of secondary ray, and only apply this material's color on the interior ray.
+            var shaded = scene.Shade(ray2, depth - 1);
+            if (p.Inside)
+                return shaded * Color;
+            return shaded;
         }
     }
 
@@ -167,7 +148,7 @@ namespace BrassRay.RayTracer
 
         protected override Vector3 ShadeCore(Ray ray, Scene scene, Intersection p, int depth)
         {
-            var c = Vector3.Dot(ray.Direction, -p.Normal.Direction);
+            var c = Vector3.Dot(ray.Direction, -p.Normal);
             var prob = _r0 + MathF.Pow(1 - c, 5) * (1 - _r0);
             var m = RandomProvider.Random.NextDouble() < prob ? Low : High;
             return m.Shade(ray, scene, p, depth);

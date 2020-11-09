@@ -15,16 +15,25 @@ namespace BrassRay.RayTracer
 
         protected override Intersection? IntersectCore(Ray ray)
         {
-            var n = ray.Inside ? Normal : -Normal;
+            var inside = false;
+            var n = Normal;
             var denom = Vector3.Dot(n, ray.Direction);
-            if (denom < Utils.Epsilon)
+            var compare = Utils.ScalarComparer.Compare(denom, 0.0f);
+            if (compare == 0)
                 return null;
+            if (compare < 0)
+            {
+                n = -Normal;
+                denom = -denom;
+                inside = true;
+            }
 
             var diff = Position - ray.Position;
-
             var t = Vector3.Dot(diff, n) / denom;
+            if (t < Utils.Epsilon)
+                return null;
             var p = ray.Position + ray.Direction * t;
-            return new Intersection(t, new Ray(p, -n, ray.Inside), this);
+            return new Intersection(t, p, -n, inside, this);
         }
     }
 }

@@ -20,10 +20,10 @@ namespace BrassRay.RayTracer
         protected override Intersection? IntersectCore(Ray ray)
         {
             var d0 = ray.Position - Position;
-            var tNear = -float.MaxValue;
-            var tFar = float.MaxValue;
-
-            var normal = Vector3.Zero;
+            var tNear = float.NegativeInfinity;
+            var tFar = float.PositiveInfinity;
+            var nNear = Vector3.Zero;
+            var nFar = Vector3.Zero;
 
             var c1 = -Width / 2.0f;
             var c2 = Width / 2.0f;
@@ -49,14 +49,12 @@ namespace BrassRay.RayTracer
                 if (t1 > tNear)
                 {
                     tNear = t1;
-                    if (!ray.Inside)
-                        normal = new Vector3(n, 0.0f, 0.0f);
+                    nNear = new Vector3(n, 0, 0);
                 }
                 if (t2 < tFar)
                 {
                     tFar = t2;
-                    if (ray.Inside)
-                        normal = new Vector3(n, 0.0f, 0.0f);
+                    nFar = new Vector3(n, 0, 0);
                 }
                 if (tNear > tFar || tFar < 0.0)
                     return null;
@@ -86,14 +84,12 @@ namespace BrassRay.RayTracer
                 if (t1 > tNear)
                 {
                     tNear = t1;
-                    if (!ray.Inside)
-                        normal = new Vector3(0.0f, n, 0.0f);
+                    nNear = new Vector3(0, n, 0);
                 }
                 if (t2 < tFar)
                 {
                     tFar = t2;
-                    if (ray.Inside)
-                        normal = new Vector3(0.0f, n, 0.0f);
+                    nFar = new Vector3(0, n, 0);
                 }
                 if (tNear > tFar || tFar < 0.0)
                     return null;
@@ -123,22 +119,33 @@ namespace BrassRay.RayTracer
                 if (t1 > tNear)
                 {
                     tNear = t1;
-                    if (!ray.Inside)
-                        normal = new Vector3(0.0f, 0.0f, n);
+                    nNear = new Vector3(0, 0, n);
                 }
                 if (t2 < tFar)
                 {
                     tFar = t2;
-                    if (ray.Inside)
-                        normal = new Vector3(0.0f, 0.0f, n);
+                    nFar = new Vector3(0, 0, n);
                 }
                 if (tNear > tFar || tFar < 0.0)
                     return null;
             }
-
-            var t = ray.Inside ? tFar : tNear;
-            var n0 = ray.Position + t * ray.Direction;
-            return new Intersection(t, new Ray(n0, normal, ray.Inside), this);
+            Vector3 normal;
+            float t;
+            bool inside;
+            if (tNear < Utils.Epsilon)
+            {
+                normal = nFar;
+                t = tFar;
+                inside = true;
+            }
+            else
+            {
+                normal = nNear;
+                t = tNear;
+                inside = false;
+            }
+            var p = ray.Position + t * ray.Direction;
+            return new Intersection(t, p, normal, inside, this);
         }
     }
 }
