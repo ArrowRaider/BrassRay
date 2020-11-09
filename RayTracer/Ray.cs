@@ -1,11 +1,12 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 
 namespace BrassRay.RayTracer
 {
     /// <summary>
     /// Represents an infinite ray described by a starting point (Position) and unit vector direction
     /// </summary>
-    public readonly struct Ray
+    public readonly struct Ray : IEquatable<Ray>
     {
         /// <summary>
         /// Initialize a new ray with the spcecified values
@@ -27,5 +28,15 @@ namespace BrassRay.RayTracer
         /// Unit vector direction of ray
         /// </summary>
         public Vector3 Direction { get; }
+
+        public bool Equals(Ray other) => Position.Equals(other.Position) && Direction.Equals(other.Direction);
+
+        public override bool Equals(object obj) => obj is Ray other && Equals(other);
+
+        public override int GetHashCode() => HashCode.Combine(Position, Direction);
+
+        public static bool operator ==(Ray left, Ray right) => left.Equals(right);
+
+        public static bool operator !=(Ray left, Ray right) => !left.Equals(right);
     }
 }

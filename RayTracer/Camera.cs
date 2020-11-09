@@ -67,7 +67,7 @@ namespace BrassRay.RayTracer
             }
         }
 
-        protected readonly struct CoordinateSystem
+        protected readonly struct CoordinateSystem : IEquatable<CoordinateSystem>
         {
             public CoordinateSystem(Vector3 origin, Vector3 u, Vector3 v, float interval)
             {
@@ -81,6 +81,16 @@ namespace BrassRay.RayTracer
             public Vector3 U { get; }
             public Vector3 V { get; }
             public float Interval { get; }
+
+            public bool Equals(CoordinateSystem other) => Origin.Equals(other.Origin) && U.Equals(other.U) && V.Equals(other.V) && Interval.Equals(other.Interval);
+
+            public override bool Equals(object obj) => obj is CoordinateSystem other && Equals(other);
+
+            public override int GetHashCode() => HashCode.Combine(Origin, U, V, Interval);
+
+            public static bool operator ==(CoordinateSystem left, CoordinateSystem right) => left.Equals(right);
+
+            public static bool operator !=(CoordinateSystem left, CoordinateSystem right) => !left.Equals(right);
         }
     }
 }

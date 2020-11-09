@@ -1,11 +1,12 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 
 namespace BrassRay.RayTracer
 {
     /// <summary>
     /// Describes the intersection of a ray and a drawable
     /// </summary>
-    public readonly struct Intersection
+    public readonly struct Intersection : IEquatable<Intersection>, IComparable<Intersection>, IComparable
     {
         public Intersection(float t, Vector3 position, Vector3 normal, bool inside, Drawable drawable)
         {
@@ -40,5 +41,35 @@ namespace BrassRay.RayTracer
         /// The drawable that intersects with the ray
         /// </summary>
         public Drawable Drawable { get; }
+
+        public bool Equals(Intersection other) => T.Equals(other.T) && Position.Equals(other.Position) &&
+                                                  Normal.Equals(other.Normal) && Inside == other.Inside &&
+                                                  Drawable.Equals(other.Drawable);
+
+        public override bool Equals(object obj) => obj is Intersection other && Equals(other);
+
+        public override int GetHashCode() => HashCode.Combine(T, Position, Normal, Inside, Drawable);
+
+        public static bool operator ==(Intersection left, Intersection right) => left.Equals(right);
+
+        public static bool operator !=(Intersection left, Intersection right) => !left.Equals(right);
+
+        public int CompareTo(Intersection other) => T.CompareTo(other.T);
+
+        public int CompareTo(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return 1;
+            return obj is Intersection other
+                ? CompareTo(other)
+                : throw new ArgumentException($"Object must be of type {nameof(Intersection)}");
+        }
+
+        public static bool operator <(Intersection left, Intersection right) => left.CompareTo(right) < 0;
+
+        public static bool operator >(Intersection left, Intersection right) => left.CompareTo(right) > 0;
+
+        public static bool operator <=(Intersection left, Intersection right) => left.CompareTo(right) <= 0;
+
+        public static bool operator >=(Intersection left, Intersection right) => left.CompareTo(right) >= 0;
     }
 }

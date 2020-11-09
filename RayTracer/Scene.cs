@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
@@ -14,13 +15,7 @@ namespace BrassRay.RayTracer
         {
             // TODO:  Build a k-d tree to efficiently search the scene graph
 
-            Intersection? result = null;
-            foreach (var p in Drawables.Select(drawable => drawable.Intersect(ray))
-                .Where(m => m.HasValue && !(m.Value.T < 0.0))
-                .Where(m => !result.HasValue || m.Value.T < result.Value.T))
-                result = p;
-
-            return result;
+            return Drawables.Select(drawable => drawable.Intersect(ray)).Min();
         }
 
         public Vector3 Shade(Ray ray, int depth = Utils.DefaultDepth)
