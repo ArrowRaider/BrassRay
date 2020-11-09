@@ -4,12 +4,12 @@ using System.Numerics;
 namespace BrassRay.RayTracer
 {
     /// <summary>
-    /// Two-color gradient background with a sun
+    /// Two-color gradient environment with a sun
     /// </summary>
-    public class SkyBackground : Background
+    public class SkyEnvironment : Environment
     {
-        public SkyBackground() { }
-        public SkyBackground(Vector3 highColor, Vector3 lowColor, Vector3 sunColor, Vector3 sunDirection, float sunFalloff)
+        public SkyEnvironment() { }
+        public SkyEnvironment(Vector3 highColor, Vector3 lowColor, Vector3 sunColor, Vector3 sunDirection, float sunFalloff)
         {
             HighColor = highColor;
             LowColor = lowColor;

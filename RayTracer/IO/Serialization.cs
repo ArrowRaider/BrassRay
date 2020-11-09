@@ -30,17 +30,17 @@ namespace BrassRay.RayTracer.IO
                         }
                     });
 
-                cfg.CreateMap<Background, BackgroundDto>()
-                    .Include<SolidBackground, SolidBackgroundDto>()
-                    .Include<SkyBackground, SkyBackgroundDto>().ReverseMap();
-                cfg.CreateMap<SolidBackground, SolidBackgroundDto>().ReverseMap();
-                cfg.CreateMap<SkyBackground, SkyBackgroundDto>().ReverseMap();
-                cfg.CreateMap<Background, BackgroundHolder>()
-                    .ForMember(d => d.SkyBackground, o => o.MapFrom(s => s as SkyBackground))
-                    .ForMember(d => d.SolidBackground, o => o.MapFrom(s => s as SolidBackground))
+                cfg.CreateMap<Environment, EnvironmentDto>()
+                    .Include<SolidEnvironment, SolidEnvironmentDto>()
+                    .Include<SkyEnvironment, SkyEnvironmentDto>().ReverseMap();
+                cfg.CreateMap<SolidEnvironment, SolidEnvironmentDto>().ReverseMap();
+                cfg.CreateMap<SkyEnvironment, SkyEnvironmentDto>().ReverseMap();
+                cfg.CreateMap<Environment, EnvironmentHolder>()
+                    .ForMember(d => d.SkyEnvironment, o => o.MapFrom(s => s as SkyEnvironment))
+                    .ForMember(d => d.SolidEnvironment, o => o.MapFrom(s => s as SolidEnvironment))
                     .ReverseMap().ConvertUsing((s, d, c) =>
                     {
-                        var item = s.SkyBackground ?? (BackgroundDto)s.SolidBackground;
+                        var item = s.SkyEnvironment ?? (EnvironmentDto)s.SolidEnvironment;
                         return c.Mapper.Map(item, d);
                     });
 

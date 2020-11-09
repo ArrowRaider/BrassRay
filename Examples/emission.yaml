@@ -1,5 +1,5 @@
-Background:
-  SolidBackground:
+Environment:
+  SolidEnvironment:
     Color: rgb [0.15, 0.15, 0.15]
 Materials:
 - EmissiveMaterial:

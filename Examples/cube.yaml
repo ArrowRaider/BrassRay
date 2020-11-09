@@ -1,5 +1,5 @@
-Background:
-  SkyBackground:
+Environment:
+  SkyEnvironment:
     HighColor: rgb [0.706, 0.835, 1]
     LowColor: rgb [1, 0.835, 0.706]
     SunColor: rgb [3.7, 3.7, 3.7]

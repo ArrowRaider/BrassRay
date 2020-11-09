@@ -5,14 +5,14 @@ using System.Text;
 
 namespace BrassRay.RayTracer.IO
 {
-    internal abstract class BackgroundDto { }
+    internal abstract class EnvironmentDto { }
 
-    internal class SolidBackgroundDto : BackgroundDto
+    internal class SolidEnvironmentDto : EnvironmentDto
     {
         public Rgb Color { get; set; }
     }
 
-    internal class SkyBackgroundDto : BackgroundDto
+    internal class SkyEnvironmentDto : EnvironmentDto
     {
         public Rgb HighColor { get; set; }
         public Rgb LowColor { get; set; }
@@ -21,9 +21,9 @@ namespace BrassRay.RayTracer.IO
         public Vector3 SunDirection { get; set; }
     }
 
-    internal class BackgroundHolder
+    internal class EnvironmentHolder
     {
-        public SolidBackgroundDto SolidBackground { get; set; }
-        public SkyBackgroundDto SkyBackground { get; set; }
+        public SolidEnvironmentDto SolidEnvironment { get; set; }
+        public SkyEnvironmentDto SkyEnvironment { get; set; }
     }
 }

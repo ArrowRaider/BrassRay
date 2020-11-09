@@ -8,7 +8,7 @@ namespace BrassRay.RayTracer
     public class Scene
     {
         public List<Drawable> Drawables { get; } = new List<Drawable>();
-        public Background Background { get; set; }
+        public Environment Environment { get; set; }
         public Camera Camera { get; set; }
 
         public Intersection? ClosestIntersection(Ray ray)
@@ -24,7 +24,7 @@ namespace BrassRay.RayTracer
                 return Vector3.Zero;
 
             var m = ClosestIntersection(ray);
-            return m?.Drawable.Material.Shade(ray, this, m.Value, depth) ?? Background.Shade(ray);
+            return m?.Drawable.Material.Shade(ray, this, m.Value, depth) ?? Environment.Shade(ray);
         }
     }
 }
