@@ -192,9 +192,11 @@ namespace BrassRay.RayTracer.IO
                 var nextMatrix = transformDto switch
                 {
                     RotateTransformDto x when x.Center.HasValue =>
-                        Matrix4x4.CreateRotationZ(DegToRad(x.Rotation.Z), x.Center.Value) *
-                        Matrix4x4.CreateRotationY(DegToRad(x.Rotation.Y), x.Center.Value) *
-                        Matrix4x4.CreateRotationX(DegToRad(x.Rotation.X), x.Center.Value),
+                        Matrix4x4.CreateTranslation(-x.Center.Value) *
+                        Matrix4x4.CreateRotationZ(DegToRad(x.Rotation.Z)) *
+                        Matrix4x4.CreateRotationY(DegToRad(x.Rotation.Y)) *
+                        Matrix4x4.CreateRotationX(DegToRad(x.Rotation.X)) *
+                        Matrix4x4.CreateTranslation(x.Center.Value),
                     RotateTransformDto x => Matrix4x4.CreateRotationZ(DegToRad(x.Rotation.Z)) *
                                             Matrix4x4.CreateRotationY(DegToRad(x.Rotation.Y)) *
                                             Matrix4x4.CreateRotationX(DegToRad(x.Rotation.X)),
@@ -202,9 +204,9 @@ namespace BrassRay.RayTracer.IO
                     ScaleTransformDto x => Matrix4x4.CreateScale(x.Scale),
                     TranslateTransformDto x => Matrix4x4.CreateTranslation(x.Offset),
                     QuaternionTransformDto x when x.Center.HasValue => 
-                        Matrix4x4.CreateTranslation(x.Center.Value) *
+                        Matrix4x4.CreateTranslation(-x.Center.Value) *
                         Matrix4x4.CreateFromQuaternion(Quaternion.CreateFromAxisAngle(x.Axis, DegToRad(x.Angle))) *
-                        Matrix4x4.CreateTranslation(-x.Center.Value),
+                        Matrix4x4.CreateTranslation(x.Center.Value),
                     QuaternionTransformDto x =>
                         Matrix4x4.CreateFromQuaternion(Quaternion.CreateFromAxisAngle(x.Axis, DegToRad(x.Angle))),
                     MatrixTransformDto x => new Matrix4x4(x.M11, x.M12, x.M13, x.M14, x.M21, x.M22, x.M23, x.M24, x.M31,

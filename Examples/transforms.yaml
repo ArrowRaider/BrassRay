@@ -55,7 +55,7 @@ Transforms:
               Name: t2
               Angle: 45
               Axis: vec [0, 1, 1]
-              Center: vec [0, -15, 0]
+              Center: vec [0, 15, 0]
 - TranslateTransform:
       Offset: vec [-20, 10, 0]
       Children:

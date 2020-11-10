@@ -66,7 +66,7 @@ namespace BrassRay.RayTracer
         protected override Vector3 ShadeCore(Ray ray, Scene scene, Intersection p, int depth)
         {
             var from = p.Position + p.Normal * Utils.Epsilon;
-            var d = -2.0f * Vector3.Dot(ray.Direction, p.Normal) * p.Normal + ray.Direction;
+            var d = -2.0f * Vector3.Dot(ray.UnitDirection, p.Normal) * p.Normal + ray.UnitDirection;
             if (Scatter > 0.0f)
                 d += Utils.SphereRandom(RandomProvider.Random) * Scatter;
             return scene.Shade(new Ray(from, d), depth - 1) * Color;
@@ -85,7 +85,7 @@ namespace BrassRay.RayTracer
         protected override Vector3 ShadeCore(Ray ray, Scene scene, Intersection p, int depth)
         {
             var from = p.Position - p.Normal * Utils.Epsilon;
-            var d = Scatter > 0.0f ? Vector3.Normalize(ray.Direction + Utils.SphereRandom(RandomProvider.Random) * Scatter) : ray.Direction;
+            var d = Scatter > 0.0f ? Vector3.Normalize(ray.UnitDirection + Utils.SphereRandom(RandomProvider.Random) * Scatter) : ray.UnitDirection;
             var refRatio = p.Inside ? Ior : 1.0f / Ior;
             var c = Vector3.Dot(p.Normal, d);
             var s = 1 - refRatio * refRatio * (1 - c * c);
@@ -148,7 +148,7 @@ namespace BrassRay.RayTracer
 
         protected override Vector3 ShadeCore(Ray ray, Scene scene, Intersection p, int depth)
         {
-            var c = Vector3.Dot(ray.Direction, -p.Normal);
+            var c = Vector3.Dot(ray.UnitDirection, -p.Normal);
             var prob = _r0 + MathF.Pow(1 - c, 5) * (1 - _r0);
             var m = RandomProvider.Random.NextDouble() < prob ? Low : High;
             return m.Shade(ray, scene, p, depth);

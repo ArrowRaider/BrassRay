@@ -12,11 +12,12 @@ namespace BrassRay.RayTracer
         /// Initialize a new ray with the spcecified values
         /// </summary>
         /// <param name="position">Starting point</param>
-        /// <param name="direction">Direction, will be converted to a unit vector</param>
+        /// <param name="direction">Direction</param>
         public Ray(Vector3 position, Vector3 direction)
         {
             Position = position;
-            Direction = Vector3.Normalize(direction);
+            Direction = direction;
+            UnitDirection = Vector3.Normalize(direction);
         }
 
         /// <summary>
@@ -25,9 +26,14 @@ namespace BrassRay.RayTracer
         public Vector3 Position { get; }
 
         /// <summary>
-        /// Unit vector direction of ray
+        /// Direction of ray
         /// </summary>
         public Vector3 Direction { get; }
+
+        /// <summary>
+        /// Unit vector direction of ray
+        /// </summary>
+        public Vector3 UnitDirection { get; }
 
         public static Ray Transform(Ray ray, Matrix4x4 matrix)
         {
@@ -36,11 +42,11 @@ namespace BrassRay.RayTracer
             return new Ray(p, d);
         }
 
-        public bool Equals(Ray other) => Position.Equals(other.Position) && Direction.Equals(other.Direction);
+        public bool Equals(Ray other) => Position.Equals(other.Position) && Direction.Equals(other.Direction) && UnitDirection.Equals(other.UnitDirection);
 
         public override bool Equals(object obj) => obj is Ray other && Equals(other);
 
-        public override int GetHashCode() => HashCode.Combine(Position, Direction);
+        public override int GetHashCode() => HashCode.Combine(Position, Direction, UnitDirection);
 
         public static bool operator ==(Ray left, Ray right) => left.Equals(right);
 

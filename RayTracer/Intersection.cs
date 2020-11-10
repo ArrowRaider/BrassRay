@@ -18,7 +18,7 @@ namespace BrassRay.RayTracer
         }
 
         /// <summary>
-        /// The distance from the ray position to the point of intersection
+        /// Relative distance from the ray position to the point of intersection in terms of original ray
         /// </summary>
         public float T { get; }
 
