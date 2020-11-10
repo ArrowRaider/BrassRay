@@ -8,6 +8,7 @@ namespace BrassRay.RayTracer.IO
     {
         public EnvironmentHolder Environment { get; set; }
         public List<MaterialHolder> Materials { get; set; }
+        public List<TransformHolder> Transforms { get; set; }
         public List<DrawableHolder> Drawables { get; set; }
         public CameraHolder Camera { get; set; }
     }

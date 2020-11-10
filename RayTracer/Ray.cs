@@ -29,6 +29,13 @@ namespace BrassRay.RayTracer
         /// </summary>
         public Vector3 Direction { get; }
 
+        public static Ray Transform(Ray ray, Matrix4x4 matrix)
+        {
+            var p = Vector3.Transform(ray.Position, matrix);
+            var d = Vector3.TransformNormal(ray.Direction, matrix);
+            return new Ray(p, d);
+        }
+
         public bool Equals(Ray other) => Position.Equals(other.Position) && Direction.Equals(other.Direction);
 
         public override bool Equals(object obj) => obj is Ray other && Equals(other);

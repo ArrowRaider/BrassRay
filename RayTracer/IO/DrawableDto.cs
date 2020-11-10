@@ -8,6 +8,7 @@ namespace BrassRay.RayTracer.IO
     internal abstract class DrawableDto
     {
         public string Material { get; set; }
+        public string Transform { get; set; }
     }
 
     internal class InfinitePlaneDto : DrawableDto

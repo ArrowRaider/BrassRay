@@ -17,7 +17,7 @@ namespace BrassRay.RayTracer.IO
 
         public bool Accepts(Type type)
         {
-            return type == typeof(Vector3);
+            return type == typeof(Vector3) || type == typeof(Vector3?);
         }
 
         public object? ReadYaml(IParser parser, Type type)
@@ -50,7 +50,7 @@ namespace BrassRay.RayTracer.IO
 
         public bool Accepts(Type type)
         {
-            return type == typeof(Rgb);
+            return type == typeof(Rgb) || type == typeof(Rgb?);
         }
 
         public object? ReadYaml(IParser parser, Type type)
