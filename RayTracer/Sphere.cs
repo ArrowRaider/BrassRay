@@ -7,6 +7,8 @@ namespace BrassRay.RayTracer
     {
         public Vector3 Position { get; set; }
         public float Radius { get; set; }
+        public override BoundingBox ObjectBounds =>
+            new BoundingBox(Position, Radius * 2.0f, Radius * 2.0f, Radius * 2.0f);
 
         protected override Intersection? IntersectCore(Ray ray)
         {

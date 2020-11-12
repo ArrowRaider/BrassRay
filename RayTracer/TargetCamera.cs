@@ -44,7 +44,7 @@ namespace BrassRay.RayTracer
                 d0 += b.X * cs.U + b.Y * cs.V;
             }
 
-            return new Ray(d0, target - d0);
+            return new Ray(d0, Vector3.Normalize(target - d0));
         }
     }
 }

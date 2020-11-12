@@ -4,6 +4,8 @@ namespace BrassRay.RayTracer
 {
     public class Box : Drawable
     {
+        public Box() { }
+
         public Box(Vector3 position, float width, float height, float depth)
         {
             Position = position;
@@ -16,6 +18,8 @@ namespace BrassRay.RayTracer
         public float Width { get; set; }
         public float Height { get; set; }
         public float Depth { get; set; }
+
+        public override BoundingBox ObjectBounds => new BoundingBox(Position, Width, Height, Depth);
 
         protected override Intersection? IntersectCore(Ray ray)
         {

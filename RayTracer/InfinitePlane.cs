@@ -7,6 +7,8 @@ namespace BrassRay.RayTracer
         private Vector3 _normal;
         public Vector3 Position { get; set; }
 
+        public override BoundingBox ObjectBounds => BoundingBox.Zero;
+
         public Vector3 Normal
         {
             get => _normal;

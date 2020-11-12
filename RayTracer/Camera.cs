@@ -23,12 +23,14 @@ namespace BrassRay.RayTracer
 
         public Vector3[,] Render(Scene scene, int samples, ProgressCallback callback = null)
         {
+            scene.Prepare();
+
             var cs = GetCoordinateSystem();
             var xBlocks = (int)MathF.Ceiling((float)PixelWidth / BlockWidth);
             var yBlocks = (int)MathF.Ceiling((float)PixelHeight / BlockHeight);
             var blockCount = xBlocks * yBlocks;
             var shaded = new Vector3[PixelWidth, PixelHeight];
-            
+
             Parallel.For(0, blockCount, i =>
             {
                 RandomProvider.InitRandom();
