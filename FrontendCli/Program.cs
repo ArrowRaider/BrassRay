@@ -6,6 +6,7 @@ using System.Threading;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using BrassRay.RayTracer;
+using System.Diagnostics;
 
 namespace BrassRay.Frontend.Cli
 {
@@ -20,17 +21,20 @@ namespace BrassRay.Frontend.Cli
                 using var reader = File.OpenText(o.ScenePath);
                 var yaml = reader.ReadToEnd();
                 var scene = Serialization.ReadScene(yaml);
-                
+
                 if (o.Height.HasValue) scene.Camera.PixelHeight = o.Height.Value;
                 if (o.Ratio.HasValue) scene.Camera.Ratio = o.Ratio.Value;
 
+                var sw = Stopwatch.StartNew();
                 var done = 0;
-                var shaded = scene.Camera.Render(scene, o.Samples, (_, __, ___, ____, _____, count) =>
+                var shaded = scene.Camera.Render(scene, o.Samples, (_, _, _, _, _, count) =>
                 {
                     Interlocked.Increment(ref done);
                     var p = Volatile.Read(ref done) / (float)count;
                     Console.Write($"{p:P1}\r");
                 });
+                sw.Stop();
+                Console.WriteLine($"{sw.Elapsed.TotalSeconds:N3} seconds");
                 using var bitmap = new Image<Bgr24>(scene.Camera.PixelWidth, scene.Camera.PixelHeight);
                 for (var y = 0; y < bitmap.Height; y++)
                 {
