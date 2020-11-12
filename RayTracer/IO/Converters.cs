@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace BrassRay.RayTracer.IO
             return type == typeof(Vector3) || type == typeof(Vector3?);
         }
 
-        public object? ReadYaml(IParser parser, Type type)
+        public object ReadYaml(IParser parser, Type type)
         {
             Match match;
             if (!parser.Accept<Scalar>(out var scalar) ||
@@ -35,7 +36,7 @@ namespace BrassRay.RayTracer.IO
 
         public void WriteYaml(IEmitter emitter, object? value, Type type)
         {
-            var v = (Vector3)value;
+            if (value is not Vector3 v) return;
             emitter.Emit(new SequenceStart(null, "vec", false, SequenceStyle.Flow));
             emitter.Emit(new Scalar($"{v.X:G3}"));
             emitter.Emit(new Scalar($"{v.Y:G3}"));
@@ -53,7 +54,7 @@ namespace BrassRay.RayTracer.IO
             return type == typeof(Rgb) || type == typeof(Rgb?);
         }
 
-        public object? ReadYaml(IParser parser, Type type)
+        public object ReadYaml(IParser parser, Type type)
         {
             Match match;
             if (!parser.Accept<Scalar>(out var scalar) ||
@@ -68,7 +69,7 @@ namespace BrassRay.RayTracer.IO
 
         public void WriteYaml(IEmitter emitter, object? value, Type type)
         {
-            var v = (Rgb)value;
+            if (value is not Rgb v) return;
             emitter.Emit(new SequenceStart(null, "rgb", false, SequenceStyle.Flow));
             emitter.Emit(new Scalar($"{v.R:G3}"));
             emitter.Emit(new Scalar($"{v.G:G3}"));
