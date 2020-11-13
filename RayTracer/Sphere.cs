@@ -10,7 +10,7 @@ namespace BrassRay.RayTracer
         public override BoundingBox ObjectBounds =>
             new BoundingBox(Position, Radius * 2.0f, Radius * 2.0f, Radius * 2.0f);
 
-        protected override Intersection? IntersectCore(Ray ray)
+        protected override Intersection? IntersectCore(in Ray ray)
         {
             var diff = ray.Position - Position;
             var a = Vector3.Dot(ray.Direction, ray.Direction);

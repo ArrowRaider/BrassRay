@@ -19,7 +19,7 @@ namespace BrassRay.RayTracer
 
         protected abstract CoordinateSystem GetCoordinateSystem();
 
-        protected abstract Ray GetCameraRay(Vector3 target, CoordinateSystem cs);
+        protected abstract Ray GetCameraRay(Vector3 target, in CoordinateSystem cs);
 
         public Vector3[,] Render(Scene scene, int samples, ProgressCallback callback = null)
         {
@@ -45,7 +45,7 @@ namespace BrassRay.RayTracer
             return shaded;
         }
 
-        private void RenderBlock(Vector3[,] shaded, int x, int y, int width, int height, CoordinateSystem cs, Scene scene, int samples)
+        private void RenderBlock(Vector3[,] shaded, int x, int y, int width, int height, in CoordinateSystem cs, Scene scene, int samples)
         {
             var random = RandomProvider.Random;
             for (var i = 0; i < height; i++)
@@ -90,9 +90,9 @@ namespace BrassRay.RayTracer
 
             public override int GetHashCode() => HashCode.Combine(Origin, U, V, Interval);
 
-            public static bool operator ==(CoordinateSystem left, CoordinateSystem right) => left.Equals(right);
+            public static bool operator ==(in CoordinateSystem left, in CoordinateSystem right) => left.Equals(right);
 
-            public static bool operator !=(CoordinateSystem left, CoordinateSystem right) => !left.Equals(right);
+            public static bool operator !=(in CoordinateSystem left, in CoordinateSystem right) => !left.Equals(right);
         }
     }
 }

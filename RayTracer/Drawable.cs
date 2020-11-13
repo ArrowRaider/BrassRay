@@ -30,13 +30,13 @@ namespace BrassRay.RayTracer
         /// Derived classes must provide the logic that calculates the intersection between a ray and this drawable
         /// </summary>
         /// <returns>Details about the point of intersection, if exists, null otherwise</returns>
-        protected abstract Intersection? IntersectCore(Ray ray);
+        protected abstract Intersection? IntersectCore(in Ray ray);
 
         /// <summary>
         /// Finds the nearest positive-direction intersection between this drawable and a ray, if such an intersection exists
         /// </summary>
         /// <returns>Details about the point of intersection, if exists, null otherwise</returns>
-        public Intersection? Intersect(Ray ray)
+        public Intersection? Intersect(in Ray ray)
         {
             var objRay = Ray.Transform(ray, _inverseTransform);
             var o = IntersectCore(objRay);
@@ -46,10 +46,10 @@ namespace BrassRay.RayTracer
             return new Intersection(o.Value.T, p, n, o.Value.Inside, o.Value.Drawable);
         }
 
-        public float IntersectBounds(Ray ray)
+        public float IntersectBounds(in Ray ray)
         {
-            ray = Ray.Transform(ray, _inverseTransform);
-            return BoundingBox.Intersect(ObjectBounds, ray);
+            var objRay = Ray.Transform(ray, _inverseTransform);
+            return BoundingBox.Intersect(ObjectBounds, objRay);
         }
 
         public BoundingBox GetBounds()

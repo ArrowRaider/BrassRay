@@ -17,7 +17,6 @@ namespace BrassRay.RayTracer
         }
         public Vector3 Up { get; set; }
         public float ViewHeight { get; set; }
-        public float PositionDolly { get; set; }
 
         protected override CoordinateSystem GetCoordinateSystem()
         {
@@ -34,9 +33,6 @@ namespace BrassRay.RayTracer
             return new CoordinateSystem(origin, u, v, interval);
         }
 
-        protected override Ray GetCameraRay(Vector3 target, CoordinateSystem cs)
-        {
-            return new Ray(target, Direction);
-        }
+        protected override Ray GetCameraRay(Vector3 target, in CoordinateSystem cs) => new Ray(target, Direction);
     }
 }

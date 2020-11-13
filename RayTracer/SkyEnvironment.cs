@@ -31,7 +31,7 @@ namespace BrassRay.RayTracer
 
         public float SunFalloff { get; set; } = 120.0f;
 
-        public override Vector3 Shade(Ray ray)
+        public override Vector3 Shade(in Ray ray)
         {
             var x = Vector3.Dot(ray.UnitDirection, SunDirection);
 

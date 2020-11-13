@@ -35,7 +35,7 @@ namespace BrassRay.RayTracer
         /// </summary>
         public Vector3 UnitDirection { get; }
 
-        public static Ray Transform(Ray ray, Matrix4x4 matrix)
+        public static Ray Transform(in Ray ray, Matrix4x4 matrix)
         {
             var p = Vector3.Transform(ray.Position, matrix);
             var d = Vector3.TransformNormal(ray.Direction, matrix);
@@ -48,8 +48,8 @@ namespace BrassRay.RayTracer
 
         public override int GetHashCode() => HashCode.Combine(Position, Direction, UnitDirection);
 
-        public static bool operator ==(Ray left, Ray right) => left.Equals(right);
+        public static bool operator ==(in Ray left, in Ray right) => left.Equals(right);
 
-        public static bool operator !=(Ray left, Ray right) => !left.Equals(right);
+        public static bool operator !=(in Ray left, in Ray right) => !left.Equals(right);
     }
 }

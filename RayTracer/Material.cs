@@ -9,9 +9,9 @@ namespace BrassRay.RayTracer
         public string Name { get; set; }
 
         // not sure if this should be made virtual
-        protected abstract Vector3 ShadeCore(Ray ray, Scene scene, Intersection p, int depth);
+        protected abstract Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth);
 
-        public Vector3 Shade(Ray ray, Scene scene, Intersection p, int depth = Utils.DefaultDepth) =>
+        public Vector3 Shade(in Ray ray, Scene scene, in Intersection p, int depth = Utils.DefaultDepth) =>
             depth <= 0 ? Vector3.Zero : ShadeCore(ray, scene, p, depth);
     }
 
@@ -21,7 +21,7 @@ namespace BrassRay.RayTracer
     public class EmissiveMaterial : Material
     {
         public Vector3 Color { get; set; }
-        protected override Vector3 ShadeCore(Ray ray, Scene scene, Intersection p, int depth) => Color;
+        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth) => Color;
     }
 
     /// <summary>
@@ -30,7 +30,7 @@ namespace BrassRay.RayTracer
     public class FastDiffuseMaterial : Material
     {
         public Vector3 Color { get; set; }
-        protected override Vector3 ShadeCore(Ray ray, Scene scene, Intersection p, int depth)
+        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth)
         {
             var d1 = new Vector3(0.0f, 0.0f, 1.0f);
             var m1 = MathF.Max(0.0f, Vector3.Dot(p.Normal, d1));
@@ -47,7 +47,7 @@ namespace BrassRay.RayTracer
     {
         public Vector3 Color { get; set; }
 
-        protected override Vector3 ShadeCore(Ray ray, Scene scene, Intersection p, int depth)
+        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth)
         {
             var from = p.Position + p.Normal * Utils.Epsilon;
             var d = p.Normal + Utils.SphereRandom(RandomProvider.Random) * 2.0f;
@@ -63,7 +63,7 @@ namespace BrassRay.RayTracer
         public Vector3 Color { get; set; }
         public float Scatter { get; set; }
 
-        protected override Vector3 ShadeCore(Ray ray, Scene scene, Intersection p, int depth)
+        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth)
         {
             var from = p.Position + p.Normal * Utils.Epsilon;
             var d = -2.0f * Vector3.Dot(ray.UnitDirection, p.Normal) * p.Normal + ray.UnitDirection;
@@ -82,7 +82,7 @@ namespace BrassRay.RayTracer
         public float Ior { get; set; } = 1.5f;
         public float Scatter { get; set; }
 
-        protected override Vector3 ShadeCore(Ray ray, Scene scene, Intersection p, int depth)
+        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth)
         {
             var from = p.Position - p.Normal * Utils.Epsilon;
             var d = Scatter > 0.0f ? Vector3.Normalize(ray.UnitDirection + Utils.SphereRandom(RandomProvider.Random) * Scatter) : ray.UnitDirection;
@@ -146,7 +146,7 @@ namespace BrassRay.RayTracer
         private float _r0;
         private float _ior;
 
-        protected override Vector3 ShadeCore(Ray ray, Scene scene, Intersection p, int depth)
+        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth)
         {
             var c = Vector3.Dot(ray.UnitDirection, -p.Normal);
             var prob = _r0 + MathF.Pow(1 - c, 5) * (1 - _r0);

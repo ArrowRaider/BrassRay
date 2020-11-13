@@ -34,7 +34,7 @@ namespace BrassRay.RayTracer
 
         public static readonly IComparer<float> ScalarComparer = new MyComparer();
 
-        private class MyComparer : Comparer<float>
+        private sealed class MyComparer : Comparer<float>
         {
             public override int Compare([AllowNull] float x, [AllowNull] float y) =>
                 MathF.Abs(x - y).CompareTo(Epsilon) <= 0 ? 0 : x.CompareTo(y);

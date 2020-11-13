@@ -29,11 +29,11 @@ namespace BrassRay.RayTracer
 
         public override int GetHashCode() => HashCode.Combine(Position, Width, Height, Depth);
 
-        public static bool operator ==(BoundingBox left, BoundingBox right) => left.Equals(right);
+        public static bool operator ==(in BoundingBox left, in BoundingBox right) => left.Equals(right);
 
-        public static bool operator !=(BoundingBox left, BoundingBox right) => !left.Equals(right);
+        public static bool operator !=(in BoundingBox left, in BoundingBox right) => !left.Equals(right);
 
-        public static float Intersect(BoundingBox boundingBox, Ray ray)
+        public static float Intersect(in BoundingBox boundingBox, in Ray ray)
         {
             var d0 = ray.Position - boundingBox.Position;
             var tNear = float.NegativeInfinity;
@@ -117,7 +117,7 @@ namespace BrassRay.RayTracer
             return tNear < Utils.Epsilon ? tFar : tNear;
         }
 
-        public static bool Intersect(BoundingBox boundingBox, Vector3 p)
+        public static bool Intersect(in BoundingBox boundingBox, Vector3 p)
         {
             var v = p - boundingBox.Position;
             return MathF.Abs(v.X) <= boundingBox.Width / 2.0f &&
@@ -125,7 +125,7 @@ namespace BrassRay.RayTracer
                    MathF.Abs(v.Z) <= boundingBox.Depth / 2.0f;
         }
 
-        public static bool Intersect(BoundingBox box1, BoundingBox box2)
+        public static bool Intersect(in BoundingBox box1, in BoundingBox box2)
         {
             var left1 = box1.Position.X - box1.Width / 2.0f;
             var right1 = box1.Position.X + box1.Width / 2.0f;

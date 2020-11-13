@@ -18,7 +18,7 @@ namespace BrassRay.RayTracer
         public float G { get; }
         public float B { get; }
 
-        public static explicit operator Vector3(Rgb x) => new Vector3(MathF.Pow(x.R, Utils.Gamma),
+        public static explicit operator Vector3(in Rgb x) => new Vector3(MathF.Pow(x.R, Utils.Gamma),
             MathF.Pow(x.G, Utils.Gamma), MathF.Pow(x.B, Utils.Gamma));
 
         public static explicit operator Rgb(Vector3 x) => new Rgb(MathF.Pow(x.X, 1.0f / Utils.Gamma),
@@ -38,7 +38,7 @@ namespace BrassRay.RayTracer
         public byte G { get; }
         public byte B { get; }
 
-        public static explicit operator Vector3(ClampedRgb x) => new Vector3(MathF.Pow(x.R / 255.0f, Utils.Gamma),
+        public static explicit operator Vector3(in ClampedRgb x) => new Vector3(MathF.Pow(x.R / 255.0f, Utils.Gamma),
             MathF.Pow(x.G / 255.0f, Utils.Gamma), MathF.Pow(x.B / 255.0f, Utils.Gamma));
 
         public static explicit operator ClampedRgb(Vector3 x)
@@ -50,6 +50,6 @@ namespace BrassRay.RayTracer
                 (byte)MathF.Round(y.Z * 255));
         }
 
-        public static explicit operator uint(ClampedRgb x) => (uint)x.R << 16 | (uint)x.G << 8 | x.B;
+        public static explicit operator uint(in ClampedRgb x) => (uint)x.R << 16 | (uint)x.G << 8 | x.B;
     }
 }

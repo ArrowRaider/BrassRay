@@ -50,9 +50,9 @@ namespace BrassRay.RayTracer
 
         public override int GetHashCode() => HashCode.Combine(T, Position, Normal, Inside, Drawable);
 
-        public static bool operator ==(Intersection left, Intersection right) => left.Equals(right);
+        public static bool operator ==(in Intersection left, in Intersection right) => left.Equals(right);
 
-        public static bool operator !=(Intersection left, Intersection right) => !left.Equals(right);
+        public static bool operator !=(in Intersection left, in Intersection right) => !left.Equals(right);
 
         public int CompareTo(Intersection other) => T.CompareTo(other.T);
 
@@ -64,12 +64,12 @@ namespace BrassRay.RayTracer
                 : throw new ArgumentException($"Object must be of type {nameof(Intersection)}");
         }
 
-        public static bool operator <(Intersection left, Intersection right) => left.CompareTo(right) < 0;
+        public static bool operator <(in Intersection left, in Intersection right) => left.CompareTo(right) < 0;
 
-        public static bool operator >(Intersection left, Intersection right) => left.CompareTo(right) > 0;
+        public static bool operator >(in Intersection left, in Intersection right) => left.CompareTo(right) > 0;
 
-        public static bool operator <=(Intersection left, Intersection right) => left.CompareTo(right) <= 0;
+        public static bool operator <=(in Intersection left, in Intersection right) => left.CompareTo(right) <= 0;
 
-        public static bool operator >=(Intersection left, Intersection right) => left.CompareTo(right) >= 0;
+        public static bool operator >=(in Intersection left, in Intersection right) => left.CompareTo(right) >= 0;
     }
 }

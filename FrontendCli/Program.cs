@@ -51,7 +51,7 @@ namespace BrassRay.Frontend.Cli
             });
         }
 
-        public class Options
+        public sealed class Options
         {
             [Value(0, MetaName = "input file", HelpText = "Input scene graph yaml file", Required = true)]
             public string ScenePath { get; set; }

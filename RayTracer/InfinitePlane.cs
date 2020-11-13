@@ -15,19 +15,21 @@ namespace BrassRay.RayTracer
             set => _normal = Vector3.Normalize(value);
         }
 
-        protected override Intersection? IntersectCore(Ray ray)
+        protected override Intersection? IntersectCore(in Ray ray)
         {
             var inside = false;
             var n = Normal;
             var denom = Vector3.Dot(n, ray.Direction);
             var compare = Utils.ScalarComparer.Compare(denom, 0.0f);
-            if (compare == 0)
-                return null;
-            if (compare < 0)
+            switch (compare)
             {
-                n = -Normal;
-                denom = -denom;
-                inside = true;
+                case 0:
+                    return null;
+                case < 0:
+                    n = -Normal;
+                    denom = -denom;
+                    inside = true;
+                    break;
             }
 
             var diff = Position - ray.Position;

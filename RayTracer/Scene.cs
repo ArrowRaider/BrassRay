@@ -29,7 +29,7 @@ namespace BrassRay.RayTracer
             return nonBspMin ?? bspMin;
         }
 
-        public Vector3 Shade(Ray ray, int depth = Utils.DefaultDepth)
+        public Vector3 Shade(in Ray ray, int depth = Utils.DefaultDepth)
         {
             if (depth <= 0)
                 return Vector3.Zero;
@@ -62,7 +62,7 @@ namespace BrassRay.RayTracer
         }
 
         // using the BSP, find the closest intersection
-        private static Intersection? ClosestIntersection(Ray ray, BspBase bsp, Span<int> visited,
+        private static Intersection? ClosestIntersection(in Ray ray, BspBase bsp, in Span<int> visited,
             IList<Drawable> drawables, int visitedIndex = 0, Intersection? min = null)
         {
             switch (bsp)
@@ -131,7 +131,7 @@ namespace BrassRay.RayTracer
 
         // recursively binary-divide the scene into pieces
         // this current algorithm is greedy and somewhat optimizing
-        private static BspBase BuildBsp(IReadOnlyCollection<(Drawable Drawable, BoundingBox Bounds)> tuples, BoundingBox bounds, int depth = BspDepth)
+        private static BspBase BuildBsp(IReadOnlyCollection<(Drawable Drawable, BoundingBox Bounds)> tuples, in BoundingBox bounds, int depth = BspDepth)
         {
             while (true)
             {
@@ -170,7 +170,7 @@ namespace BrassRay.RayTracer
         
         // binary partition tuples and bounds at the specified axis
         private static BinaryPartition Partition(IReadOnlyCollection<(Drawable Drawable, BoundingBox Bounds)> tuples,
-            BoundingBox bounds, int axis)
+            in BoundingBox bounds, int axis)
         {
             var mid = axis switch
             {
@@ -187,7 +187,7 @@ namespace BrassRay.RayTracer
         }
 
         // split bounds at the specified mid of the specified axis
-        private static (BoundingBox Left, BoundingBox Right) DivideBounds(BoundingBox bounds, int axis, float mid)
+        private static (BoundingBox Left, BoundingBox Right) DivideBounds(in BoundingBox bounds, int axis, float mid)
         {
             BoundingBox left, right;
             float start, end;
@@ -249,13 +249,13 @@ namespace BrassRay.RayTracer
             public BoundingBox Bounds { get; init; }
         }
 
-        private record BspTree : BspBase
+        private sealed record BspTree : BspBase
         {
             public BspBase Left { get; init; }
             public BspBase Right { get; init; }
         }
 
-        private record BspLeaf : BspBase
+        private sealed record BspLeaf : BspBase
         {
             public IReadOnlyList<Drawable> Contents { get; init; }
         }

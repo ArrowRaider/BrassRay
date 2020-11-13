@@ -35,7 +35,7 @@ namespace BrassRay.RayTracer
             return new CoordinateSystem(origin, u, v, interval);
         }
 
-        protected override Ray GetCameraRay(Vector3 target, CoordinateSystem cs)
+        protected override Ray GetCameraRay(Vector3 target, in CoordinateSystem cs)
         {
             var d0 = Position;
             if (Blur > 0.0)

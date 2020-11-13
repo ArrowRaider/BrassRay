@@ -7,7 +7,7 @@ namespace BrassRay.RayTracer
     /// </summary>
     public abstract class Environment
     {
-        public abstract Vector3 Shade(Ray ray);
+        public abstract Vector3 Shade(in Ray ray);
     }
 
     /// <summary>
@@ -20,6 +20,6 @@ namespace BrassRay.RayTracer
 
         public Vector3 Color { get; set; }
 
-        public override Vector3 Shade(Ray ray) => Color;
+        public override Vector3 Shade(in Ray ray) => Color;
     }
 }

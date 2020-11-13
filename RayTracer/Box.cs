@@ -21,7 +21,7 @@ namespace BrassRay.RayTracer
 
         public override BoundingBox ObjectBounds => new BoundingBox(Position, Width, Height, Depth);
 
-        protected override Intersection? IntersectCore(Ray ray)
+        protected override Intersection? IntersectCore(in Ray ray)
         {
             var d0 = ray.Position - Position;
             var tNear = float.NegativeInfinity;
