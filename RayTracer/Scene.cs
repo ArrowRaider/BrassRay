@@ -19,9 +19,16 @@ namespace BrassRay.RayTracer
         // updated at Prepare(), drawables that are not in the BSP
         private Drawable[] _nonBsp;
 
-        public Intersection? ClosestIntersection(Ray ray)
+        public Intersection? ClosestIntersection(in Ray ray)
         {
-            var nonBspMin = _nonBsp.Select(d => d.Intersect(ray)).Min();
+            Intersection? nonBspMin = null;
+            foreach (var drawable in _nonBsp)
+            {
+                var m = drawable.Intersect(ray);
+                if (!nonBspMin.HasValue || m < nonBspMin)
+                    nonBspMin = m;
+            }
+
             Span<int> visited = stackalloc int[Drawables.Count - _nonBsp.Length];
             var bspMin = ClosestIntersection(ray, _bsp, visited, Drawables);
             if (nonBspMin.HasValue && bspMin.HasValue)
