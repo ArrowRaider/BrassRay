@@ -29,7 +29,7 @@ namespace BrassRay.RayTracer
             var xBlocks = (int)MathF.Ceiling((float)PixelWidth / BlockWidth);
             var yBlocks = (int)MathF.Ceiling((float)PixelHeight / BlockHeight);
             var blockCount = xBlocks * yBlocks;
-            var shaded = new Vector3[PixelWidth, PixelHeight];
+            var shaded = new Vector3[PixelHeight, PixelWidth];
 
             Parallel.For(0, blockCount, i =>
             {
@@ -64,7 +64,7 @@ namespace BrassRay.RayTracer
                                                         (2 * (float)random.NextDouble() - 1));
                         acc += scene.Shade(GetCameraRay(p, cs)) / samples;
                     }
-                    shaded[x + j, y + i] = acc;
+                    shaded[y + i, x + j] = acc;
                 }
             }
         }

@@ -41,7 +41,7 @@ namespace BrassRay.Frontend.Cli
                     var pixelRowSpan = bitmap.GetPixelRowSpan(y);
                     for (var x = 0; x < bitmap.Width; x++)
                     {
-                        var s = shaded[x, y];
+                        var s = shaded[y, x];
                         var c = (ClampedRgb)s;
                         pixelRowSpan[x] = new Bgr24(c.R, c.G, c.B);
                     }
