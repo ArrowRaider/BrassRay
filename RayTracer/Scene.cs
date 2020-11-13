@@ -231,7 +231,7 @@ namespace BrassRay.RayTracer
             return (left, right);
         }
 
-        private readonly struct BinaryPartition
+        private readonly ref struct BinaryPartition
         {
             public BinaryPartition(IReadOnlyCollection<(Drawable Drawable, BoundingBox Bounds)> leftTuples,
                 IReadOnlyCollection<(Drawable Drawable, BoundingBox Bounds)> rightTuples, BoundingBox leftBounds,
