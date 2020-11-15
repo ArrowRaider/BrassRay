@@ -21,9 +21,14 @@ namespace BrassRay.RayTracer.IO
         public Vector3 SunDirection { get; set; }
     }
 
+    internal class RainbowEnvironmentDto : EnvironmentDto
+    {
+    }
+
     internal class EnvironmentHolder
     {
         public SolidEnvironmentDto SolidEnvironment { get; set; }
         public SkyEnvironmentDto SkyEnvironment { get; set; }
+        public RainbowEnvironmentDto RainbowEnvironment { get; set; }
     }
 }

@@ -55,15 +55,18 @@ namespace BrassRay.RayTracer.IO
 
                 cfg.CreateMap<Environment, EnvironmentDto>()
                     .Include<SolidEnvironment, SolidEnvironmentDto>()
-                    .Include<SkyEnvironment, SkyEnvironmentDto>().ReverseMap();
+                    .Include<SkyEnvironment, SkyEnvironmentDto>()
+                    .Include<RainbowEnvironment, RainbowEnvironmentDto>().ReverseMap();
                 cfg.CreateMap<SolidEnvironment, SolidEnvironmentDto>().ReverseMap();
                 cfg.CreateMap<SkyEnvironment, SkyEnvironmentDto>().ReverseMap();
+                cfg.CreateMap<RainbowEnvironment, RainbowEnvironmentDto>().ReverseMap();
                 cfg.CreateMap<Environment, EnvironmentHolder>()
                     .ForMember(d => d.SkyEnvironment, o => o.MapFrom(s => s as SkyEnvironment))
                     .ForMember(d => d.SolidEnvironment, o => o.MapFrom(s => s as SolidEnvironment))
+                    .ForMember(d => d.RainbowEnvironment, o => o.MapFrom(s => s as RainbowEnvironment))
                     .ReverseMap().ConvertUsing((s, d, c) =>
                     {
-                        var item = s.SkyEnvironment ?? (EnvironmentDto)s.SolidEnvironment;
+                        var item = s.SkyEnvironment ?? s.SolidEnvironment ?? (EnvironmentDto)s.RainbowEnvironment;
                         return c.Mapper.Map(item, d);
                     });
 
