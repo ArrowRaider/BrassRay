@@ -30,7 +30,7 @@ namespace BrassRay.RayTracer
 
             var origin = Position + u * w / 2 + v * h / 2;
 
-            return new CoordinateSystem(origin, u, v, interval);
+            return new CoordinateSystem(origin, u, v, new Vector2(interval));
         }
 
         protected override Ray GetCameraRay(Vector3 target, in CoordinateSystem cs) => new Ray(target, Direction);

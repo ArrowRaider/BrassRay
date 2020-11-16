@@ -30,9 +30,15 @@ namespace BrassRay.RayTracer.IO
         public float ViewHeight { get; set; }
     }
 
+    internal class SphericalCameraDto : CameraDto
+    {
+        public Vector3 Position { get; set; }
+    }
+
     internal class CameraHolder
     {
         public TargetCameraDto TargetCamera { get; set; }
         public OrthographicCameraDto OrthographicCamera { get; set; }
+        public SphericalCameraDto SphericalCamera { get; set; }
     }
 }

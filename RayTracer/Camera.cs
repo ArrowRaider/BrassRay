@@ -56,12 +56,8 @@ namespace BrassRay.RayTracer
                     for (var k = 0; k < samples; k++)
                     {
                         var p = cs.Origin
-                                - cs.U * (cs.Interval * (j + x) +
-                                                        cs.Interval / 2 *
-                                                        (2 * (float)random.NextDouble() - 1))
-                                - cs.V * (cs.Interval * (i + y) +
-                                                        cs.Interval / 2 *
-                                                        (2 * (float)random.NextDouble() - 1));
+                                - cs.U * (cs.Interval.X * (j + x + (float)random.NextDouble() - 0.5f))
+                                - cs.V * (cs.Interval.Y * (i + y + (float)random.NextDouble() - 0.5f));
                         acc += scene.Shade(GetCameraRay(p, cs)) / samples;
                     }
                     shaded[y + i, x + j] = acc;
@@ -71,7 +67,7 @@ namespace BrassRay.RayTracer
 
         protected readonly struct CoordinateSystem : IEquatable<CoordinateSystem>
         {
-            public CoordinateSystem(Vector3 origin, Vector3 u, Vector3 v, float interval)
+            public CoordinateSystem(Vector3 origin, Vector3 u, Vector3 v, Vector2 interval)
             {
                 Origin = origin;
                 U = u;
@@ -82,7 +78,7 @@ namespace BrassRay.RayTracer
             public Vector3 Origin { get; }
             public Vector3 U { get; }
             public Vector3 V { get; }
-            public float Interval { get; }
+            public Vector2 Interval { get; }
 
             public bool Equals(CoordinateSystem other) => Origin.Equals(other.Origin) && U.Equals(other.U) && V.Equals(other.V) && Interval.Equals(other.Interval);
 
