@@ -23,6 +23,10 @@ namespace BrassRay.RayTracer.IO
 
     internal class RainbowEnvironmentDto : EnvironmentDto
     {
+        public Rgb XColor { get; set; }
+        public Rgb YColor { get; set; }
+        public Rgb ZColor { get; set; }
+        public Vector3 Scale { get; set; }
     }
 
     internal class EnvironmentHolder
