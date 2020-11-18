@@ -27,7 +27,7 @@ namespace BrassRay.Frontend.Cli
 
                 var sw = Stopwatch.StartNew();
                 var done = 0;
-                var shaded = scene.Camera.Render(scene, o.Samples, (_, _, _, _, _, count) =>
+                var render = scene.Camera.Render(scene, o.Samples, (_, _, _, _, _, count) =>
                 {
                     Interlocked.Increment(ref done);
                     var p = Volatile.Read(ref done) / (float)count;
@@ -41,8 +41,7 @@ namespace BrassRay.Frontend.Cli
                     var pixelRowSpan = bitmap.GetPixelRowSpan(y);
                     for (var x = 0; x < bitmap.Width; x++)
                     {
-                        var s = shaded[y, x];
-                        var c = (ClampedRgb)s;
+                        var c = render[y, x];
                         pixelRowSpan[x] = new Bgr24(c.R, c.G, c.B);
                     }
                 }

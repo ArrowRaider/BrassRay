@@ -8,7 +8,6 @@ namespace BrassRay.RayTracer
     public static class Utils
     {
         public const int DefaultDepth = 30;
-        public const float Gamma = 2.2f;
         public const float Epsilon = 1.0e-4f;
 
         public static Vector2 DiscRandom(Random r)

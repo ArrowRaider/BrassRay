@@ -10,9 +10,10 @@ namespace BrassRay.RayTracer
         private const int BspDepth = 7;
         private const int MinBspLeafSize = 3;
 
-        public List<Drawable> Drawables { get; } = new List<Drawable>();
+        public List<Drawable> Drawables { get; } = new();
         public Environment Environment { get; set; }
         public Camera Camera { get; set; }
+        public ColorModel ColorModel { get; set; } = new();
 
         // updated at Prepare(), hierarchical partitioned representation of scene drawables
         private BspBase _bsp;
@@ -42,7 +43,9 @@ namespace BrassRay.RayTracer
                 return Vector3.Zero;
 
             var m = ClosestIntersection(ray);
-            return m?.Drawable.Material.Shade(ray, this, m.Value, depth) ?? Environment.Shade(ray);
+            return m?.Drawable.Material.Shade(ray, this, m.Value, depth) ?? (depth >= Utils.DefaultDepth
+                ? ColorModel.InFactor * ColorModel.EnvironmentBackgroundFactor * Environment.Shade(ray)
+                : Environment.Shade(ray));
         }
 
         /// <summary>

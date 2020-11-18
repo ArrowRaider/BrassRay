@@ -14,7 +14,7 @@ namespace BrassRay.RayTracer.IO
         private static float DegToRad(float x) => x * MathF.PI / 180.0f;
 
         // This mess returns a mapping between concrete-space and dto-space
-        private static readonly Lazy<IMapper> Mapper = new Lazy<IMapper>(() =>
+        private static IMapper CreateMapper(ColorModel colorModel)
         {
             var config = new MapperConfiguration(cfg =>
             {
@@ -159,28 +159,26 @@ namespace BrassRay.RayTracer.IO
                         return c.Mapper.Map(dto, d);
                     });
 
-                cfg.CreateMap<Vector3, Rgb>().ConvertUsing(s => (Rgb)s);
-                cfg.CreateMap<Vector3, ClampedRgb>().ConvertUsing(s => (ClampedRgb)s);
-                cfg.CreateMap<Rgb, Vector3>().ConvertUsing(s => (Vector3)s);
-                cfg.CreateMap<ClampedRgb, Vector3>().ConvertUsing(s => (Vector3)s);
+                cfg.CreateMap<Vector3, Rgb>().ConvertUsing(s => colorModel.VectorToRgb(s));
+                cfg.CreateMap<Rgb, Vector3>().ConvertUsing(s => colorModel.RgbToVector(s));
             });
 #if DEBUG
             config.AssertConfigurationIsValid();
 #endif
             return config.CreateMapper();
-        });
+        }
         
         public static Scene ReadScene(string yamlString)
         {
             var deserializer = new DeserializerBuilder().WithTypeConverter(new Vector3Converter())
                 .WithTypeConverter(new RgbConverter()).Build();
             var dto = deserializer.Deserialize<SceneDto>(yamlString);
-            return Mapper.Value.Map<Scene>(dto);
+            return CreateMapper(dto.ColorModel).Map<Scene>(dto);
         }
 
         public static string WriteScene(Scene scene)
         {
-            var dto = Mapper.Value.Map<SceneDto>(scene);
+            var dto = CreateMapper(scene.ColorModel).Map<SceneDto>(scene);
             var serializer = new SerializerBuilder().WithTypeConverter(new Vector3Converter())
                 .WithTypeConverter(new RgbConverter())
                 .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull).Build();

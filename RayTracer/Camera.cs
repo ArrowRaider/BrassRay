@@ -9,7 +9,7 @@ namespace BrassRay.RayTracer
 {
     public abstract class Camera
     {
-        public delegate void ProgressCallback(Vector3[,] shaded, int x, int y, int width, int height, int blockCount);
+        public delegate void ProgressCallback(ClampedRgb[,] shaded, int x, int y, int width, int height, int blockCount);
 
         public int BlockWidth { get; set; } = 32;
         public int BlockHeight { get; set; } = 32;
@@ -21,7 +21,7 @@ namespace BrassRay.RayTracer
 
         protected abstract Ray GetCameraRay(Vector3 target, in CoordinateSystem cs);
 
-        public Vector3[,] Render(Scene scene, int samples, ProgressCallback callback = null)
+        public ClampedRgb[,] Render(Scene scene, int samples, ProgressCallback callback = null)
         {
             scene.Prepare();
 
@@ -29,7 +29,7 @@ namespace BrassRay.RayTracer
             var xBlocks = (int)MathF.Ceiling((float)PixelWidth / BlockWidth);
             var yBlocks = (int)MathF.Ceiling((float)PixelHeight / BlockHeight);
             var blockCount = xBlocks * yBlocks;
-            var shaded = new Vector3[PixelHeight, PixelWidth];
+            var buffer = new ClampedRgb[PixelHeight, PixelWidth];
 
             Parallel.For(0, blockCount, i =>
             {
@@ -38,14 +38,14 @@ namespace BrassRay.RayTracer
                 var y = i / xBlocks * BlockHeight;
                 var width = Math.Min(PixelWidth, x + BlockWidth) - x;
                 var height = Math.Min(PixelHeight, y + BlockHeight) - y;
-                RenderBlock(shaded, x, y, width, height, cs, scene, samples);
-                callback?.Invoke(shaded, x, y, width, height, blockCount);
+                RenderBlock(buffer, x, y, width, height, cs, scene, samples);
+                callback?.Invoke(buffer, x, y, width, height, blockCount);
             });
 
-            return shaded;
+            return buffer;
         }
 
-        private void RenderBlock(Vector3[,] shaded, int x, int y, int width, int height, in CoordinateSystem cs, Scene scene, int samples)
+        private void RenderBlock(ClampedRgb[,] buffer, int x, int y, int width, int height, in CoordinateSystem cs, Scene scene, int samples)
         {
             var random = RandomProvider.Random;
             for (var i = 0; i < height; i++)
@@ -60,7 +60,7 @@ namespace BrassRay.RayTracer
                                 - cs.V * (cs.Interval.Y * (i + y + (float)random.NextDouble() - 0.5f));
                         acc += scene.Shade(GetCameraRay(p, cs)) / samples;
                     }
-                    shaded[y + i, x + j] = acc;
+                    buffer[y + i, x + j] = (ClampedRgb)scene.ColorModel.VectorToRgb(acc);
                 }
             }
         }
