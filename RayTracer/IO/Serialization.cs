@@ -13,6 +13,11 @@ namespace BrassRay.RayTracer.IO
     {
         private static float DegToRad(float x) => x * MathF.PI / 180.0f;
 
+        private static Vector3 DegToRad(Vector3 x) =>
+            new(x.X * MathF.PI / 180.0f, x.Y * MathF.PI / 180.0f, x.Z * MathF.PI / 180.0f);
+        private static Vector3 RadToDeg(Vector3 x) =>
+            new(x.X / MathF.PI * 180.0f, x.Y / MathF.PI * 180.0f, x.Z / MathF.PI * 180.0f);
+
         // This mess returns a mapping between concrete-space and dto-space
         private static IMapper CreateMapper(ColorModel colorModel)
         {
@@ -127,7 +132,9 @@ namespace BrassRay.RayTracer.IO
                     .Include<SphericalCamera, SphericalCameraDto>().ReverseMap();
                 cfg.CreateMap<TargetCamera, TargetCameraDto>().ReverseMap();
                 cfg.CreateMap<OrthographicCamera, OrthographicCameraDto>().ReverseMap();
-                cfg.CreateMap<SphericalCamera, SphericalCameraDto>().ReverseMap();
+                cfg.CreateMap<SphericalCamera, SphericalCameraDto>()
+                    .ForMember(d => d.Rotation, o => o.MapFrom(s => RadToDeg(s.Rotation)))
+                    .ReverseMap().ForMember(d => d.Rotation, o => o.MapFrom(s => DegToRad(s.Rotation)));
                 cfg.CreateMap<Camera, CameraHolder>()
                     .ForMember(d => d.TargetCamera, o => o.MapFrom(s => s as TargetCamera))
                     .ForMember(d => d.OrthographicCamera, o => o.MapFrom(s => s as OrthographicCamera))
