@@ -12,28 +12,28 @@ namespace BrassRay.RayTracer.IO
 
     internal class EmissiveMaterialDto : MaterialDto
     {
-        public Rgb Color { get; set; }
+        public dynamic Color { get; set; }
     }
 
     internal class FastDiffuseMaterialDto : MaterialDto
     {
-        public Rgb Color { get; set; }
+        public dynamic Color { get; set; }
     }
 
     internal class LambertianMaterialDto : MaterialDto
     {
-        public Rgb Color { get; set; }
+        public dynamic Color { get; set; }
     }
 
     internal class ReflectMaterialDto : MaterialDto
     {
-        public Rgb Color { get; set; }
+        public dynamic Color { get; set; }
         public decimal Scatter { get; set; }
     }
 
     internal class RefractMaterialDto : MaterialDto
     {
-        public Rgb Color { get; set; }
+        public dynamic Color { get; set; }
         public decimal Ior { get; set; }
         public decimal Scatter { get; set; }
     }

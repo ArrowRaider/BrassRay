@@ -1,38 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Numerics;
 using System.Text;
 
 namespace BrassRay.RayTracer.IO
 {
-    internal abstract class EnvironmentDto { }
-
-    internal class SolidEnvironmentDto : EnvironmentDto
+    internal class EnvironmentDto
     {
-        public Rgb Color { get; set; }
-    }
-
-    internal class SkyEnvironmentDto : EnvironmentDto
-    {
-        public Rgb HighColor { get; set; }
-        public Rgb LowColor { get; set; }
-        public Rgb SunColor { get; set; }
-        public decimal SunFalloff { get; set; }
-        public Vector3 SunDirection { get; set; }
-    }
-
-    internal class RainbowEnvironmentDto : EnvironmentDto
-    {
-        public Rgb XColor { get; set; }
-        public Rgb YColor { get; set; }
-        public Rgb ZColor { get; set; }
-        public Vector3 Scale { get; set; }
-    }
-
-    internal class EnvironmentHolder
-    {
-        public SolidEnvironmentDto SolidEnvironment { get; set; }
-        public SkyEnvironmentDto SkyEnvironment { get; set; }
-        public RainbowEnvironmentDto RainbowEnvironment { get; set; }
+        public dynamic Color { get; set; }
     }
 }

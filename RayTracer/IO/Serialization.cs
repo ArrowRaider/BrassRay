@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Text;
+using System.Text.RegularExpressions;
 using AutoMapper;
 using YamlDotNet.Serialization;
 
@@ -11,6 +11,9 @@ namespace BrassRay.RayTracer.IO
 {
     public static class Serialization
     {
+        private static readonly Regex RgbExp = new (@"^rgb\s*\[\s*(\S+),\s*(\S+),\s*(\S+)\s*\]$");
+        private static readonly Regex VecExp = new (@"^vec\s*\[\s*(\S+),\s*(\S+),\s*(\S+)\s*\]$");
+
         private static float DegToRad(float x) => x * MathF.PI / 180.0f;
 
         private static Vector3 DegToRad(Vector3 x) =>
@@ -58,22 +61,7 @@ namespace BrassRay.RayTracer.IO
                         }
                     });
 
-                cfg.CreateMap<Environment, EnvironmentDto>()
-                    .Include<SolidEnvironment, SolidEnvironmentDto>()
-                    .Include<SkyEnvironment, SkyEnvironmentDto>()
-                    .Include<RainbowEnvironment, RainbowEnvironmentDto>().ReverseMap();
-                cfg.CreateMap<SolidEnvironment, SolidEnvironmentDto>().ReverseMap();
-                cfg.CreateMap<SkyEnvironment, SkyEnvironmentDto>().ReverseMap();
-                cfg.CreateMap<RainbowEnvironment, RainbowEnvironmentDto>().ReverseMap();
-                cfg.CreateMap<Environment, EnvironmentHolder>()
-                    .ForMember(d => d.SkyEnvironment, o => o.MapFrom(s => s as SkyEnvironment))
-                    .ForMember(d => d.SolidEnvironment, o => o.MapFrom(s => s as SolidEnvironment))
-                    .ForMember(d => d.RainbowEnvironment, o => o.MapFrom(s => s as RainbowEnvironment))
-                    .ReverseMap().ConvertUsing((s, d, c) =>
-                    {
-                        var item = s.SkyEnvironment ?? s.SolidEnvironment ?? (EnvironmentDto)s.RainbowEnvironment;
-                        return c.Mapper.Map(item, d);
-                    });
+                cfg.CreateMap<Environment, EnvironmentDto>().ReverseMap();
 
                 cfg.CreateMap<Drawable, DrawableDto>()
                     .ForMember(d => d.Material, o => o.MapFrom(s => s.Material.Name))
@@ -166,6 +154,72 @@ namespace BrassRay.RayTracer.IO
                         return c.Mapper.Map(dto, d);
                     });
 
+                cfg.CreateMap<Sampler, SamplerDto>()
+                    .Include<SolidSampler, SolidSamplerDto>()
+                    .Include<CheckerSampler, CheckerSamplerDto>()
+                    .Include<SkySampler, SkySamplerDto>()
+                    .Include<RainbowSampler, RainbowSamplerDto>().ReverseMap();
+                cfg.CreateMap<SolidSampler, SolidSamplerDto>().ReverseMap();
+                cfg.CreateMap<CheckerSampler, CheckerSamplerDto>().ReverseMap();
+                cfg.CreateMap<SkySampler, SkySamplerDto>().ReverseMap();
+                cfg.CreateMap<RainbowSampler, RainbowSamplerDto>().ReverseMap();
+                cfg.CreateMap<Sampler, SamplerHolder>()
+                    .ForMember(d => d.CheckerSampler, o => o.MapFrom(s => s as CheckerSampler))
+                    .ForMember(d => d.SolidSampler, o => o.MapFrom(s => s as SolidSampler))
+                    .ForMember(d => d.SkySampler, o => o.MapFrom(s => s as SkySampler))
+                    .ForMember(d => d.RainbowSampler, o => o.MapFrom(s => s as RainbowSampler))
+                    .ReverseMap().ConvertUsing((s, d, c) =>
+                    {
+                        var item = s.CheckerSampler ?? s.SolidSampler ?? s.SkySampler ?? (SamplerDto)s.RainbowSampler;
+                        return c.Mapper.Map(item, d);
+                    });
+
+                cfg.CreateMap<string, SamplerHolder>().ConvertUsing((s, _, _) =>
+                {
+                    Match match;
+                    if ((match = RgbExp.Match(s)).Success &&
+                        float.TryParse(match.Groups[1].Value, out var r) &&
+                        float.TryParse(match.Groups[2].Value, out var g) &&
+                        float.TryParse(match.Groups[3].Value, out var b))
+                        return new SamplerHolder { SolidSampler = new SolidSamplerDto { Color = new Rgb(r, g, b) } };
+                    if ((match = VecExp.Match(s)).Success &&
+                        float.TryParse(match.Groups[1].Value, out var x) &&
+                        float.TryParse(match.Groups[2].Value, out var y) &&
+                        float.TryParse(match.Groups[3].Value, out var z))
+                        return new SamplerHolder { SolidSampler = new SolidSamplerDto { Color = new Vector3(x, y, z) } };
+                    throw new InvalidDataException();
+                });
+                cfg.CreateMap<object, Sampler>().ConvertUsing((s, d, c) =>
+                {
+                    var item = s switch
+                    {
+                        Dictionary<object, object> dict => c.Mapper.Map<SamplerHolder>(ConvertDictionaries(dict)),
+                        string str => c.Mapper.Map<SamplerHolder>(str),
+                        _ => throw new NotSupportedException()
+                    };
+                    
+                    return c.Mapper.Map(item, d);
+                });
+
+                cfg.CreateMap<string, Vector3>().ConvertUsing((s, d, c) =>
+                {
+                    Match match;
+                    if ((match = RgbExp.Match(s)).Success &&
+                        float.TryParse(match.Groups[1].Value, out var r) &&
+                        float.TryParse(match.Groups[2].Value, out var g) &&
+                        float.TryParse(match.Groups[3].Value, out var b))
+                    {
+                        var item = new Rgb(r, g, b);
+                        return c.Mapper.Map(item, d);
+                    }
+                    if ((match = VecExp.Match(s)).Success &&
+                        float.TryParse(match.Groups[1].Value, out var x) &&
+                        float.TryParse(match.Groups[2].Value, out var y) &&
+                        float.TryParse(match.Groups[3].Value, out var z))
+                        return new Vector3(x, y, z);
+                    throw new InvalidDataException();
+                });
+
                 cfg.CreateMap<Vector3, Rgb>().ConvertUsing(s => colorModel.VectorToRgb(s));
                 cfg.CreateMap<Rgb, Vector3>().ConvertUsing(s => colorModel.RgbToVector(s));
             });
@@ -180,6 +234,7 @@ namespace BrassRay.RayTracer.IO
             var deserializer = new DeserializerBuilder().WithTypeConverter(new Vector3Converter())
                 .WithTypeConverter(new RgbConverter()).Build();
             var dto = deserializer.Deserialize<SceneDto>(yamlString);
+            
             return CreateMapper(dto.ColorModel).Map<Scene>(dto);
         }
 
@@ -232,5 +287,9 @@ namespace BrassRay.RayTracer.IO
 
             return dict;
         }
+
+        private static Dictionary<string, object> ConvertDictionaries(Dictionary<object, object> d) =>
+            d.ToDictionary(p => p.Key.ToString(),
+                p => p.Value is Dictionary<object, object> dNext ? ConvertDictionaries(dNext) : p.Value);
     }
 }

@@ -20,8 +20,8 @@ namespace BrassRay.RayTracer
     /// </summary>
     public class EmissiveMaterial : Material
     {
-        public Vector3 Color { get; set; }
-        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth) => Color;
+        public Sampler Color { get; set; }
+        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth) => Color.Sample(p.Position);
     }
 
     /// <summary>
@@ -29,14 +29,14 @@ namespace BrassRay.RayTracer
     /// </summary>
     public class FastDiffuseMaterial : Material
     {
-        public Vector3 Color { get; set; }
+        public Sampler Color { get; set; }
         protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth)
         {
             var d1 = new Vector3(0.0f, 0.0f, 1.0f);
             var m1 = MathF.Max(0.0f, Vector3.Dot(p.Normal, d1));
             var d2 = new Vector3(2.0f, 1.0f, -1.0f);
             var m2 = MathF.Max(0.0f, Vector3.Dot(p.Normal, d2));
-            return (m1 * 0.6f + m2 * 0.4f) * Color;
+            return (m1 * 0.6f + m2 * 0.4f) * Color.Sample(p.Position);
         }
     }
 
@@ -45,13 +45,13 @@ namespace BrassRay.RayTracer
     /// </summary>
     public class LambertianMaterial : Material
     {
-        public Vector3 Color { get; set; }
+        public Sampler Color { get; set; }
 
         protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth)
         {
             var from = p.Position + p.Normal * Utils.Epsilon;
             var d = p.Normal + Utils.SphereRandom(RandomProvider.Random) * 2.0f;
-            return scene.Shade(new Ray(from, d), depth - 1) * Color;
+            return scene.Shade(new Ray(from, d), depth - 1) * Color.Sample(p.Position);
         }
     }
 
@@ -60,7 +60,7 @@ namespace BrassRay.RayTracer
     /// </summary>
     public class ReflectMaterial : Material
     {
-        public Vector3 Color { get; set; }
+        public Sampler Color { get; set; }
         public float Scatter { get; set; }
 
         protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth)
@@ -69,7 +69,7 @@ namespace BrassRay.RayTracer
             var d = -2.0f * Vector3.Dot(ray.UnitDirection, p.Normal) * p.Normal + ray.UnitDirection;
             if (Scatter > 0.0f)
                 d += Utils.SphereRandom(RandomProvider.Random) * Scatter;
-            return scene.Shade(new Ray(from, d), depth - 1) * Color;
+            return scene.Shade(new Ray(from, d), depth - 1) * Color.Sample(p.Position);
         }
     }
 
@@ -78,7 +78,7 @@ namespace BrassRay.RayTracer
     /// </summary>
     public class RefractMaterial : Material
     {
-        public Vector3 Color { get; set; }
+        public Sampler Color { get; set; }
         public float Ior { get; set; } = 1.5f;
         public float Scatter { get; set; }
 
@@ -105,11 +105,10 @@ namespace BrassRay.RayTracer
                 ray2 = new Ray(from, d2);
             }
 
-            // get shade of secondary ray, and only apply this material's color on the interior ray.
-            var shaded = scene.Shade(ray2, depth - 1);
-            if (p.Inside)
-                return shaded * Color;
-            return shaded;
+            var color = Color.Sample(p.Position);
+            color = new Vector3(MathF.Sqrt(color.X), MathF.Sqrt(color.Y), MathF.Sqrt(color.Z));
+            // get shade of secondary ray
+            return scene.Shade(ray2, depth - 1) * color;
         }
     }
 
