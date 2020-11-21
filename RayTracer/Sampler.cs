@@ -9,9 +9,23 @@ namespace BrassRay.RayTracer
 {
     public abstract class Sampler
     {
+        private Matrix4x4 _transform = Matrix4x4.Identity;
+        private Matrix4x4 _inverseTransform = Matrix4x4.Identity;
+        public Matrix4x4 Transform
+        {
+            get => _transform;
+            set
+            {
+                _transform = value;
+                if (!Matrix4x4.Invert(_transform, out _inverseTransform))
+                    throw new InvalidOperationException();
+            }
+        }
+
         public Vector3 Sample(Vector3 point)
         {
-            return SampleCore(point);
+            var transformed = Vector3.Transform(point, _inverseTransform);
+            return SampleCore(transformed);
         }
 
         protected abstract Vector3 SampleCore(Vector3 point);
@@ -21,10 +35,7 @@ namespace BrassRay.RayTracer
     {
         public Vector3 Color { get; set; }
 
-        protected override Vector3 SampleCore(Vector3 point)
-        {
-            return Color;
-        }
+        protected override Vector3 SampleCore(Vector3 point) => Color;
     }
 
     public class CheckerSampler : Sampler

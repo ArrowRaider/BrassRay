@@ -153,6 +153,27 @@ namespace BrassRay.RayTracer.IO
                         var dto = c.Mapper.Map<MatrixTransformDto>(s);
                         return c.Mapper.Map(dto, d);
                     });
+                cfg.CreateMap<TransformHolder, Matrix4x4>()
+                    .ConvertUsing((s, d, c) =>
+                    {
+                        if (s == null) return Matrix4x4.Identity;
+                        var dto = c.Mapper.Map<TransformDto>(s);
+                        return c.Mapper.Map(dto, d);
+                    });
+
+                cfg.CreateMap<List<TransformHolder>, Matrix4x4>()
+                    .ConvertUsing((s, d, c) =>
+                    {
+                        if (s == null || s.Count == 0) return Matrix4x4.Identity;
+                        var dtos = c.Mapper.Map<List<TransformDto>>(s);
+                        var matrices = c.Mapper.Map<List<Matrix4x4>>(dtos);
+                        return matrices.Aggregate((left, right) => left * right);
+                    });
+                cfg.CreateMap<Matrix4x4, List<TransformHolder>> ()
+                    .ConvertUsing((s, d, c) =>
+                    {
+                        throw new NotImplementedException();
+                    });
 
                 cfg.CreateMap<Sampler, SamplerDto>()
                     .Include<SolidSampler, SolidSamplerDto>()
@@ -222,6 +243,31 @@ namespace BrassRay.RayTracer.IO
 
                 cfg.CreateMap<Vector3, Rgb>().ConvertUsing(s => colorModel.VectorToRgb(s));
                 cfg.CreateMap<Rgb, Vector3>().ConvertUsing(s => colorModel.RgbToVector(s));
+
+                cfg.CreateMap<TransformDto, Matrix4x4>().ConvertUsing((s, _, _) => s switch
+                {
+                    RotateTransformDto x when x.Center.HasValue =>
+                        Matrix4x4.CreateTranslation(-x.Center.Value) *
+                        Matrix4x4.CreateFromYawPitchRoll(DegToRad(x.Rotation.Y), DegToRad(x.Rotation.X),
+                            DegToRad(x.Rotation.Z)) *
+                        Matrix4x4.CreateTranslation(x.Center.Value),
+                    RotateTransformDto x => Matrix4x4.CreateRotationZ(DegToRad(x.Rotation.Z)) *
+                                            Matrix4x4.CreateRotationY(DegToRad(x.Rotation.Y)) *
+                                            Matrix4x4.CreateRotationX(DegToRad(x.Rotation.X)),
+                    ScaleTransformDto x when x.Center.HasValue => Matrix4x4.CreateScale(x.Scale, x.Center.Value),
+                    ScaleTransformDto x => Matrix4x4.CreateScale(x.Scale),
+                    TranslateTransformDto x => Matrix4x4.CreateTranslation(x.Offset),
+                    QuaternionTransformDto x when x.Center.HasValue =>
+                        Matrix4x4.CreateTranslation(-x.Center.Value) *
+                        Matrix4x4.CreateFromQuaternion(Quaternion.CreateFromAxisAngle(x.Axis, DegToRad(x.Angle))) *
+                        Matrix4x4.CreateTranslation(x.Center.Value),
+                    QuaternionTransformDto x =>
+                        Matrix4x4.CreateFromQuaternion(Quaternion.CreateFromAxisAngle(x.Axis, DegToRad(x.Angle))),
+                    MatrixTransformDto x => new Matrix4x4(x.M11, x.M12, x.M13, x.M14, x.M21, x.M22, x.M23, x.M24,
+                        x.M31,
+                        x.M32, x.M33, x.M34, x.M41, x.M42, x.M43, x.M44),
+                    _ => throw new InvalidOperationException()
+                });
             });
 #if DEBUG
             config.AssertConfigurationIsValid();
@@ -255,30 +301,7 @@ namespace BrassRay.RayTracer.IO
             var transformDtos = c.Mapper.Map<List<TransformDto>>(transformHolders);
             foreach (var transformDto in transformDtos)
             {
-                var nextMatrix = transformDto switch
-                {
-                    RotateTransformDto x when x.Center.HasValue =>
-                        Matrix4x4.CreateTranslation(-x.Center.Value) *
-                        Matrix4x4.CreateRotationZ(DegToRad(x.Rotation.Z)) *
-                        Matrix4x4.CreateRotationY(DegToRad(x.Rotation.Y)) *
-                        Matrix4x4.CreateRotationX(DegToRad(x.Rotation.X)) *
-                        Matrix4x4.CreateTranslation(x.Center.Value),
-                    RotateTransformDto x => Matrix4x4.CreateRotationZ(DegToRad(x.Rotation.Z)) *
-                                            Matrix4x4.CreateRotationY(DegToRad(x.Rotation.Y)) *
-                                            Matrix4x4.CreateRotationX(DegToRad(x.Rotation.X)),
-                    ScaleTransformDto x when x.Center.HasValue => Matrix4x4.CreateScale(x.Scale, x.Center.Value),
-                    ScaleTransformDto x => Matrix4x4.CreateScale(x.Scale),
-                    TranslateTransformDto x => Matrix4x4.CreateTranslation(x.Offset),
-                    QuaternionTransformDto x when x.Center.HasValue => 
-                        Matrix4x4.CreateTranslation(-x.Center.Value) *
-                        Matrix4x4.CreateFromQuaternion(Quaternion.CreateFromAxisAngle(x.Axis, DegToRad(x.Angle))) *
-                        Matrix4x4.CreateTranslation(x.Center.Value),
-                    QuaternionTransformDto x =>
-                        Matrix4x4.CreateFromQuaternion(Quaternion.CreateFromAxisAngle(x.Axis, DegToRad(x.Angle))),
-                    MatrixTransformDto x => new Matrix4x4(x.M11, x.M12, x.M13, x.M14, x.M21, x.M22, x.M23, x.M24, x.M31,
-                        x.M32, x.M33, x.M34, x.M41, x.M42, x.M43, x.M44),
-                    _ => throw new InvalidOperationException()
-                };
+                var nextMatrix = c.Mapper.Map<Matrix4x4>(transformDto);
                 var compositeMatrix = nextMatrix * matrix;
                 if (!string.IsNullOrWhiteSpace(transformDto.Name))
                     dict.Add(transformDto.Name, compositeMatrix);
@@ -290,6 +313,12 @@ namespace BrassRay.RayTracer.IO
 
         private static Dictionary<string, object> ConvertDictionaries(Dictionary<object, object> d) =>
             d.ToDictionary(p => p.Key.ToString(),
-                p => p.Value is Dictionary<object, object> dNext ? ConvertDictionaries(dNext) : p.Value);
+                p => p.Value switch
+                {
+                    Dictionary<object, object> dNext => ConvertDictionaries(dNext),
+                    List<object> list => list.Select(el =>
+                        el is Dictionary<object, object> elDNext ? ConvertDictionaries(elDNext) : el).ToList(),
+                    _ => p.Value
+                });
     }
 }

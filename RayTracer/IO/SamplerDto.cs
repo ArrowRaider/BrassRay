@@ -9,7 +9,7 @@ namespace BrassRay.RayTracer.IO
 {
     internal abstract class SamplerDto
     {
-
+        public List<TransformHolder> Transform { get; set; }
     }
 
     internal class SolidSamplerDto : SamplerDto
