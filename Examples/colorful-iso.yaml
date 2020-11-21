@@ -1,10 +1,11 @@
 Environment:
-  SkyEnvironment:
-    HighColor: rgb [0.706, 0.835, 1]
-    LowColor: rgb [1, 0.835, 0.706]
-    SunColor: rgb [3.5, 3.5, 3.5]
-    SunFalloff: 120
-    SunDirection: vec [0.391, 0.651, 0.651]
+  Color:
+    SkySampler:
+      HighColor: rgb [0.706, 0.835, 1]
+      LowColor: rgb [1, 0.835, 0.706]
+      SunColor: rgb [3.5, 3.5, 3.5]
+      SunFalloff: 120
+      SunDirection: vec [0.391, 0.651, 0.651]
 Materials:
 - SchlickMaterial:
     High:

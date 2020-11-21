@@ -1,6 +1,7 @@
+ColorModel:
+  InFactor: 0.8
 Environment:
-  SolidEnvironment:
-    Color: rgb [0.15, 0.15, 0.15]
+  Color: rgb [0.15, 0.15, 0.15]
 Materials:
 - EmissiveMaterial:
     Color: rgb [ 2, 2, 2 ]
