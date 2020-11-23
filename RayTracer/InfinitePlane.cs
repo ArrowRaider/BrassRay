@@ -5,7 +5,6 @@ namespace BrassRay.RayTracer
     public class InfinitePlane : Drawable
     {
         private Vector3 _normal;
-        public Vector3 Position { get; set; }
 
         public override BoundingBox ObjectBounds => BoundingBox.Zero;
 
@@ -17,7 +16,7 @@ namespace BrassRay.RayTracer
 
         protected override Intersection? IntersectCore(in Ray ray)
         {
-            var inside = false;
+            var inside = true;
             var n = Normal;
             var denom = Vector3.Dot(n, ray.Direction);
             var compare = Utils.ScalarComparer.Compare(denom, 0.0f);
@@ -28,16 +27,15 @@ namespace BrassRay.RayTracer
                 case < 0:
                     n = -Normal;
                     denom = -denom;
-                    inside = true;
+                    inside = false;
                     break;
             }
 
-            var diff = Position - ray.Position;
-            var t = Vector3.Dot(diff, n) / denom;
+            var t = Vector3.Dot(-ray.Position, n) / denom;
             if (t < Utils.Epsilon)
                 return null;
             var p = ray.Position + ray.Direction * t;
-            return new Intersection(t, p, -n, inside, this);
+            return new Intersection(t, p, -n, p, inside, this);
         }
     }
 }

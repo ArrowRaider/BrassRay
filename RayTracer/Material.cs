@@ -21,7 +21,7 @@ namespace BrassRay.RayTracer
     public class EmissiveMaterial : Material
     {
         public Sampler Color { get; set; }
-        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth) => Color.Sample(p.Position);
+        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth) => Color.Sample(p.TextureCoordinates);
     }
 
     /// <summary>
@@ -36,7 +36,7 @@ namespace BrassRay.RayTracer
             var m1 = MathF.Max(0.0f, Vector3.Dot(p.Normal, d1));
             var d2 = new Vector3(2.0f, 1.0f, -1.0f);
             var m2 = MathF.Max(0.0f, Vector3.Dot(p.Normal, d2));
-            return (m1 * 0.6f + m2 * 0.4f) * Color.Sample(p.Position);
+            return (m1 * 0.6f + m2 * 0.4f) * Color.Sample(p.TextureCoordinates);
         }
     }
 
@@ -51,7 +51,7 @@ namespace BrassRay.RayTracer
         {
             var from = p.Position + p.Normal * Utils.Epsilon;
             var d = p.Normal + Utils.SphereRandom(RandomProvider.Random) * 2.0f;
-            return scene.Shade(new Ray(from, d), depth - 1) * Color.Sample(p.Position);
+            return scene.Shade(new Ray(from, d), depth - 1) * Color.Sample(p.TextureCoordinates);
         }
     }
 
@@ -69,7 +69,7 @@ namespace BrassRay.RayTracer
             var d = -2.0f * Vector3.Dot(ray.UnitDirection, p.Normal) * p.Normal + ray.UnitDirection;
             if (Scatter > 0.0f)
                 d += Utils.SphereRandom(RandomProvider.Random) * Scatter;
-            return scene.Shade(new Ray(from, d), depth - 1) * Color.Sample(p.Position);
+            return scene.Shade(new Ray(from, d), depth - 1) * Color.Sample(p.TextureCoordinates);
         }
     }
 
@@ -105,7 +105,7 @@ namespace BrassRay.RayTracer
                 ray2 = new Ray(from, d2);
             }
 
-            var color = Color.Sample(p.Position);
+            var color = Color.Sample(p.TextureCoordinates);
             color = new Vector3(MathF.Sqrt(color.X), MathF.Sqrt(color.Y), MathF.Sqrt(color.Z));
             // get shade of secondary ray
             return scene.Shade(ray2, depth - 1) * color;

@@ -45,9 +45,9 @@ namespace BrassRay.RayTracer
 
         protected override Vector3 SampleCore(Vector3 point)
         {
-            var u = ((int)MathF.Floor(point.X / 8) & 1) == 0;
-            var v = ((int)MathF.Floor(point.Y / 8) & 1) == 0;
-            var w = ((int)MathF.Floor(point.Z / 8) & 1) == 0;
+            var u = ((int)MathF.Floor(point.X * 2 + Utils.Epsilon) & 1) == 0;
+            var v = ((int)MathF.Floor(point.Y * 2 + Utils.Epsilon) & 1) == 0;
+            var w = ((int)MathF.Floor(point.Z * 2 + Utils.Epsilon) & 1) == 0;
             return w == (u != v) ? Color1.Sample(point) : Color2.Sample(point);
         }
     }

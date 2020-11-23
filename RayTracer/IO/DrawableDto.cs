@@ -7,19 +7,19 @@ namespace BrassRay.RayTracer.IO
 {
     internal abstract class DrawableDto
     {
+        public Vector3 Position { get; set; }
         public string Material { get; set; }
         public string Transform { get; set; }
+        public Projection TextureProjection { get; set; } = Projection.None;
     }
 
     internal class InfinitePlaneDto : DrawableDto
     {
-        public Vector3 Position { get; set; }
         public Vector3 Normal { get; set; }
     }
 
     internal class BoxDto : DrawableDto
     {
-        public Vector3 Position { get; set; }
         public decimal Width { get; set; }
         public decimal Height { get; set; }
         public decimal Depth { get; set; }
@@ -27,7 +27,6 @@ namespace BrassRay.RayTracer.IO
 
     internal class SphereDto : DrawableDto
     {
-        public Vector3 Position { get; set; }
         public decimal Radius { get; set; }
     }
 

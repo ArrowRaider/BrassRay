@@ -8,11 +8,12 @@ namespace BrassRay.RayTracer
     /// </summary>
     public readonly struct Intersection : IEquatable<Intersection>, IComparable<Intersection>, IComparable
     {
-        public Intersection(float t, Vector3 position, Vector3 normal, bool inside, Drawable drawable)
+        public Intersection(float t, Vector3 position, Vector3 normal, Vector3 textureCoordinates, bool inside, Drawable drawable)
         {
             T = t;
             Position = position;
             Normal = Vector3.Normalize(normal);
+            TextureCoordinates = textureCoordinates;
             Inside = inside;
             Drawable = drawable;
         }
@@ -32,6 +33,8 @@ namespace BrassRay.RayTracer
         /// </summary>
         public Vector3 Normal { get; }
 
+        public Vector3 TextureCoordinates { get; }
+
         /// <summary>
         /// Whether ray originated inside the drawable or not
         /// </summary>
@@ -43,12 +46,14 @@ namespace BrassRay.RayTracer
         public Drawable Drawable { get; }
 
         public bool Equals(Intersection other) => T.Equals(other.T) && Position.Equals(other.Position) &&
-                                                  Normal.Equals(other.Normal) && Inside == other.Inside &&
-                                                  Drawable.Equals(other.Drawable);
+                                                  Normal.Equals(other.Normal) &&
+                                                  TextureCoordinates.Equals(other.TextureCoordinates) &&
+                                                  Inside == other.Inside && Drawable.Equals(other.Drawable);
 
         public override bool Equals(object obj) => obj is Intersection other && Equals(other);
 
-        public override int GetHashCode() => HashCode.Combine(T, Position, Normal, Inside, Drawable);
+        public override int GetHashCode() =>
+            HashCode.Combine(T, Position, Normal, TextureCoordinates, Inside, Drawable);
 
         public static bool operator ==(in Intersection left, in Intersection right) => left.Equals(right);
 
@@ -58,7 +63,7 @@ namespace BrassRay.RayTracer
 
         public int CompareTo(object obj)
         {
-            if (ReferenceEquals(null, obj)) return 1;
+            if (obj is null) return 1;
             return obj is Intersection other
                 ? CompareTo(other)
                 : throw new ArgumentException($"Object must be of type {nameof(Intersection)}");

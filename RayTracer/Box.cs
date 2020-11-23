@@ -13,17 +13,15 @@ namespace BrassRay.RayTracer
             Height = height;
             Depth = depth;
         }
-
-        public Vector3 Position { get; set; }
         public float Width { get; set; }
         public float Height { get; set; }
         public float Depth { get; set; }
 
-        public override BoundingBox ObjectBounds => new BoundingBox(Position, Width, Height, Depth);
+        public override BoundingBox ObjectBounds => new (Vector3.Zero, Width, Height, Depth);
 
         protected override Intersection? IntersectCore(in Ray ray)
         {
-            var d0 = ray.Position - Position;
+            var d0 = ray.Position;
             var tNear = float.NegativeInfinity;
             var tFar = float.PositiveInfinity;
             var nNear = Vector3.Zero;
@@ -149,7 +147,7 @@ namespace BrassRay.RayTracer
                 inside = false;
             }
             var p = ray.Position + t * ray.Direction;
-            return new Intersection(t, p, normal, inside, this);
+            return new Intersection(t, p, normal, p, inside, this);
         }
     }
 }

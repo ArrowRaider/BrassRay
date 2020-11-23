@@ -6,8 +6,10 @@ namespace BrassRay.RayTracer
     public abstract class Drawable
     {
         private Matrix4x4 _transform = Matrix4x4.Identity;
-        private Matrix4x4 _inverseTransform = Matrix4x4.Identity;
-        private Matrix4x4 _inverseTransposeTransform = Matrix4x4.Identity;
+        private Matrix4x4 _matrix = Matrix4x4.Identity;
+        private Matrix4x4 _inverseMatrix = Matrix4x4.Identity;
+        private Matrix4x4 _inverseTransposeMatrix = Matrix4x4.Identity;
+        private Vector3 _position = Vector3.Zero;
 
         public Material Material { get; set; }
 
@@ -17,13 +19,31 @@ namespace BrassRay.RayTracer
             set
             {
                 _transform = value;
-                if (!Matrix4x4.Invert(_transform, out _inverseTransform))
-                    throw new InvalidOperationException();
-                _inverseTransposeTransform = Matrix4x4.Transpose(_inverseTransform);
+                UpdateMatrix();
             }
         }
 
+        public Vector3 Position
+        {
+            get => _position;
+            set
+            {
+                _position = value;
+                UpdateMatrix();
+            }
+        }
+
+        public Projection TextureProjection { get; set; } = Projection.None;
+
         public abstract BoundingBox ObjectBounds { get; }
+
+        private void UpdateMatrix()
+        {
+            _matrix = Matrix4x4.CreateTranslation(Position) * Transform;
+            if (!Matrix4x4.Invert(_matrix, out _inverseMatrix))
+                throw new InvalidOperationException();
+            _inverseTransposeMatrix = Matrix4x4.Transpose(_inverseMatrix);
+        }
 
         // not sure if this should be made virtual
         /// <summary>
@@ -31,24 +51,50 @@ namespace BrassRay.RayTracer
         /// </summary>
         /// <returns>Details about the point of intersection, if exists, null otherwise</returns>
         protected abstract Intersection? IntersectCore(in Ray ray);
-
+        
         /// <summary>
         /// Finds the nearest positive-direction intersection between this drawable and a ray, if such an intersection exists
         /// </summary>
         /// <returns>Details about the point of intersection, if exists, null otherwise</returns>
         public Intersection? Intersect(in Ray ray)
         {
-            var objRay = Ray.Transform(ray, _inverseTransform);
-            var o = IntersectCore(objRay);
-            if (!o.HasValue) return null;
-            var p = Vector3.Transform(o.Value.Position, Transform);
-            var n = Vector3.TransformNormal(o.Value.Normal, _inverseTransposeTransform);
-            return new Intersection(o.Value.T, p, n, o.Value.Inside, o.Value.Drawable);
+            var objRay = Ray.Transform(ray, _inverseMatrix);
+            var oi = IntersectCore(objRay);
+            if (!oi.HasValue) return null;
+            var wp = Vector3.Transform(oi.Value.Position, _matrix);
+            var wn = Vector3.TransformNormal(oi.Value.Normal, _inverseTransposeMatrix);
+
+            Vector3 tc;
+            switch (TextureProjection)
+            {
+                case Projection.None:
+                    tc = oi.Value.TextureCoordinates;
+                    break;
+                case Projection.PlaneXy:
+                    tc = new Vector3(oi.Value.Position.X, oi.Value.Position.Y, 0.0f);
+                    break;
+                case Projection.Sphere:
+                    {
+                        var r = oi.Value.Position.Length();
+                        var theta = oi.Value.Position.Z != 0.0f || oi.Value.Position.X != 0.0f
+                            ? MathF.Atan2(oi.Value.Position.Z, oi.Value.Position.X)
+                            : 0.0f;
+                        var phi = r > 0.0 ? MathF.Acos(oi.Value.Position.Y / r) : 0.0f;
+                        var u = (theta + MathF.PI) / (2.0f * MathF.PI);
+                        var v = phi / MathF.PI;
+                        tc = new Vector3(u, v, 0.1f);
+                        break;
+                    }
+                default:
+                    throw new NotImplementedException();
+            }
+
+            return new Intersection(oi.Value.T, wp, wn, tc, oi.Value.Inside, oi.Value.Drawable);
         }
 
         public float IntersectBounds(in Ray ray)
         {
-            var objRay = Ray.Transform(ray, _inverseTransform);
+            var objRay = Ray.Transform(ray, _inverseMatrix);
             return BoundingBox.Intersect(ObjectBounds, objRay);
         }
 

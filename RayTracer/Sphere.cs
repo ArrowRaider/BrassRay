@@ -5,17 +5,15 @@ namespace BrassRay.RayTracer
 {
     public class Sphere : Drawable
     {
-        public Vector3 Position { get; set; }
         public float Radius { get; set; }
         public override BoundingBox ObjectBounds =>
-            new BoundingBox(Position, Radius * 2.0f, Radius * 2.0f, Radius * 2.0f);
+            new BoundingBox(Vector3.Zero, Radius * 2.0f, Radius * 2.0f, Radius * 2.0f);
 
         protected override Intersection? IntersectCore(in Ray ray)
         {
-            var diff = ray.Position - Position;
             var a = Vector3.Dot(ray.Direction, ray.Direction);
-            var halfB = Vector3.Dot(diff, ray.Direction);
-            var c = Vector3.Dot(diff, diff) - Radius * Radius;
+            var halfB = Vector3.Dot(ray.Position, ray.Direction);
+            var c = Vector3.Dot(ray.Position, ray.Position) - Radius * Radius;
             var x = halfB * halfB - a * c;
             if (x < Utils.Epsilon)
                 return null;
@@ -28,12 +26,12 @@ namespace BrassRay.RayTracer
                 if (t < Utils.Epsilon)
                     return null;
                 var p = ray.Position + ray.Direction * t;
-                return new Intersection(t, p, Position - p, true, this);
+                return new Intersection(t, p, -p, p, true, this);
             }
             else
             {
                 var p = ray.Position + ray.Direction * t;
-                return new Intersection(t, p, p - Position, false, this);
+                return new Intersection(t, p, p, p, false, this);
             }
         }
     }
