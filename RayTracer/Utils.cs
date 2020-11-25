@@ -10,23 +10,25 @@ namespace BrassRay.RayTracer
         public const int DefaultDepth = 30;
         public const float Epsilon = 1.0e-4f;
 
-        public static Vector2 DiscRandom(Random r)
+        public static Vector2 DiscRandom(Sobol.Sequence sequence, int dimension)
         {
             Vector2 result;
             do
             {
-                result = new Vector2((float)r.NextDouble() * 2.0f - 1.0f, (float)r.NextDouble() * 2.0f - 1.0f);
+                result = new Vector2(sequence.Get(dimension) * 2.0f - 1.0f,
+                    sequence.Get(dimension + 1) * 2.0f - 1.0f);
             } while (result.LengthSquared() > 1.0f);
             return result;
         }
 
-        public static Vector3 SphereRandom(Random r)
+        public static Vector3 SphereRandom(Sobol.Sequence sequence, int dimension)
         {
             Vector3 result;
             do
             {
-                result = new Vector3((float)r.NextDouble() * 2.0f - 1.0f, (float)r.NextDouble() * 2.0f - 1.0f,
-                    (float)r.NextDouble() * 2.0f - 1.0f);
+                result = new Vector3(sequence.Get(dimension) * 2.0f - 1.0f,
+                    sequence.Get(dimension + 1) * 2.0f - 1.0f,
+                    sequence.Get(dimension + 2) * 2.0f - 1.0f);
             } while (result.LengthSquared() > 1.0f);
             return result;
         }

@@ -9,10 +9,10 @@ namespace BrassRay.RayTracer
         public string Name { get; set; }
 
         // not sure if this should be made virtual
-        protected abstract Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth);
+        protected abstract Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, ShadeState state);
 
-        public Vector3 Shade(in Ray ray, Scene scene, in Intersection p, int depth = Utils.DefaultDepth) =>
-            depth <= 0 ? Vector3.Zero : ShadeCore(ray, scene, p, depth);
+        public Vector3 Shade(in Ray ray, Scene scene, in Intersection p, ShadeState state) =>
+            state.Depth <= 0 ? Vector3.Zero : ShadeCore(ray, scene, p, state);
     }
 
     /// <summary>
@@ -21,7 +21,7 @@ namespace BrassRay.RayTracer
     public class EmissiveMaterial : Material
     {
         public Sampler Color { get; set; }
-        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth) => Color.Sample(p.TextureCoordinates);
+        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, ShadeState state) => Color.Sample(p.TextureCoordinates);
     }
 
     /// <summary>
@@ -30,7 +30,7 @@ namespace BrassRay.RayTracer
     public class FastDiffuseMaterial : Material
     {
         public Sampler Color { get; set; }
-        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth)
+        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, ShadeState state)
         {
             var d1 = new Vector3(0.0f, 0.0f, 1.0f);
             var m1 = MathF.Max(0.0f, Vector3.Dot(p.Normal, d1));
@@ -47,11 +47,12 @@ namespace BrassRay.RayTracer
     {
         public Sampler Color { get; set; }
 
-        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth)
+        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, ShadeState state)
         {
             var from = p.Position + p.Normal * Utils.Epsilon;
-            var d = p.Normal + Utils.SphereRandom(RandomProvider.Random) * 2.0f;
-            return scene.Shade(new Ray(from, d), depth - 1) * Color.Sample(p.TextureCoordinates);
+            var d = p.Normal + Utils.SphereRandom(state.SobolSequence, 0) * 2.0f;
+            state.Depth--;
+            return scene.Shade(new Ray(from, d), state) * Color.Sample(p.TextureCoordinates);
         }
     }
 
@@ -63,13 +64,14 @@ namespace BrassRay.RayTracer
         public Sampler Color { get; set; }
         public float Scatter { get; set; }
 
-        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth)
+        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, ShadeState state)
         {
             var from = p.Position + p.Normal * Utils.Epsilon;
             var d = -2.0f * Vector3.Dot(ray.UnitDirection, p.Normal) * p.Normal + ray.UnitDirection;
             if (Scatter > 0.0f)
-                d += Utils.SphereRandom(RandomProvider.Random) * Scatter;
-            return scene.Shade(new Ray(from, d), depth - 1) * Color.Sample(p.TextureCoordinates);
+                d += Utils.SphereRandom(state.SobolSequence, 3) * Scatter;
+            state.Depth--;
+            return scene.Shade(new Ray(from, d), state) * Color.Sample(p.TextureCoordinates);
         }
     }
 
@@ -82,10 +84,10 @@ namespace BrassRay.RayTracer
         public float Ior { get; set; } = 1.5f;
         public float Scatter { get; set; }
 
-        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth)
+        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, ShadeState state)
         {
             var from = p.Position - p.Normal * Utils.Epsilon;
-            var d = Scatter > 0.0f ? Vector3.Normalize(ray.UnitDirection + Utils.SphereRandom(RandomProvider.Random) * Scatter) : ray.UnitDirection;
+            var d = Scatter > 0.0f ? Vector3.Normalize(ray.UnitDirection + Utils.SphereRandom(state.SobolSequence, 6) * Scatter) : ray.UnitDirection;
             var refRatio = p.Inside ? Ior : 1.0f / Ior;
             var c = Vector3.Dot(p.Normal, d);
             var s = 1 - refRatio * refRatio * (1 - c * c);
@@ -108,7 +110,8 @@ namespace BrassRay.RayTracer
             var color = Color.Sample(p.TextureCoordinates);
             color = new Vector3(MathF.Sqrt(color.X), MathF.Sqrt(color.Y), MathF.Sqrt(color.Z));
             // get shade of secondary ray
-            return scene.Shade(ray2, depth - 1) * color;
+            state.Depth--;
+            return scene.Shade(ray2, state) * color;
         }
     }
 
@@ -145,12 +148,12 @@ namespace BrassRay.RayTracer
         private float _r0;
         private float _ior;
 
-        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, int depth)
+        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, ShadeState state)
         {
             var c = Vector3.Dot(ray.UnitDirection, -p.Normal);
             var prob = _r0 + MathF.Pow(1 - c, 5) * (1 - _r0);
-            var m = RandomProvider.Random.NextDouble() < prob ? Low : High;
-            return m.Shade(ray, scene, p, depth);
+            var m = state.SobolSequence.Get(9) < prob ? Low : High;
+            return m.Shade(ray, scene, p, state);
         }
     }
 }

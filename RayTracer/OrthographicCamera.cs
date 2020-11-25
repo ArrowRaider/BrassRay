@@ -33,6 +33,7 @@ namespace BrassRay.RayTracer
             return new CoordinateSystem(origin, u, v, new Vector2(interval));
         }
 
-        protected override Ray GetCameraRay(Vector3 target, in CoordinateSystem cs) => new Ray(target, Direction);
+        protected override Ray GetCameraRay(Vector3 target, in CoordinateSystem cs, in Sobol.Sequence sobolSequence) =>
+            new(target, Direction);
     }
 }

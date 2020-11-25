@@ -35,12 +35,12 @@ namespace BrassRay.RayTracer
             return new CoordinateSystem(origin, u, v, new Vector2(interval));
         }
 
-        protected override Ray GetCameraRay(Vector3 target, in CoordinateSystem cs)
+        protected override Ray GetCameraRay(Vector3 target, in CoordinateSystem cs, in Sobol.Sequence sobolSequence)
         {
             var d0 = Position;
             if (Blur > 0.0)
             {
-                var b = Utils.DiscRandom(RandomProvider.Random) * Blur;
+                var b = Utils.DiscRandom(sobolSequence, 0) * Blur;
                 d0 += b.X * cs.U + b.Y * cs.V;
             }
 

@@ -30,7 +30,7 @@ namespace BrassRay.RayTracer
                 new Vector2(2.0f * MathF.PI / PixelWidth, MathF.PI / PixelHeight));
         }
 
-        protected override Ray GetCameraRay(Vector3 target, in CoordinateSystem cs)
+        protected override Ray GetCameraRay(Vector3 target, in CoordinateSystem cs, in Sobol.Sequence sobolSequence)
         {
             var rY = MathF.Cos(target.Y);
             var d = new Vector3(rY * MathF.Cos(target.X), MathF.Sin(target.Y), rY * MathF.Sin(target.X));

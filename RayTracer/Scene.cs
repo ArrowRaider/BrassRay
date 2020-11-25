@@ -37,13 +37,13 @@ namespace BrassRay.RayTracer
             return nonBspMin ?? bspMin;
         }
 
-        public Vector3 Shade(in Ray ray, int depth = Utils.DefaultDepth)
+        public Vector3 Shade(in Ray ray, ShadeState state)
         {
-            if (depth <= 0)
+            if (state.Depth <= 0)
                 return Vector3.Zero;
 
             var m = ClosestIntersection(ray);
-            return m?.Drawable.Material.Shade(ray, this, m.Value, depth) ?? (depth >= Utils.DefaultDepth
+            return m?.Drawable.Material.Shade(ray, this, m.Value, state) ?? (state.Depth >= Utils.DefaultDepth
                 ? ColorModel.InFactor * ColorModel.EnvironmentBackgroundFactor * Environment.Shade(ray)
                 : Environment.Shade(ray));
         }
