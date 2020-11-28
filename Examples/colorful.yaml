@@ -1,3 +1,5 @@
+ColorModel:
+  InFactor: 0.9
 Environment:
   SkySampler:
     HighColor: rgb [0.706, 0.835, 1]
@@ -8,7 +10,7 @@ Environment:
 Samplers:
 - Name: ground
   CheckerSampler:
-    Color1: rgb [0.627, 0.627, 0.627]
+    Color1: rgb [0.9627, 0.9627, 0.9627]
     Color2: rgb [0.4, 0.4, 0.4]
     Transform:
     - ScaleTransform:
