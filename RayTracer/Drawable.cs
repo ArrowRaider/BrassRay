@@ -121,7 +121,7 @@ namespace BrassRay.RayTracer
                 ObjectBounds.Depth / 2.0f) + ObjectBounds.Position;
             for (var i = 0; i < 8; i++)
             {
-                points[i] = Vector3.Transform(points[i], Transform);
+                points[i] = Vector3.Transform(points[i], _matrix);
             }
 
             var left = points[0].X;

@@ -1,24 +1,23 @@
 ColorModel:
   InFactor: 0.8
-Environment:
-  Color: rgb [0.15, 0.15, 0.15]
+Environment: rgb [0.15, 0.15, 0.15]
 Materials:
-- EmissiveMaterial:
+- Name: glow
+  EmissiveMaterial:
     Color: rgb [ 2, 2, 2 ]
-    Name: glow
-- LambertianMaterial:
+- Name: ground
+  LambertianMaterial:
     Color: rgb [0.627, 0.627, 0.627]
-    Name: ground
-- SchlickMaterial:
+- Name: object
+  SchlickMaterial:
     High:
       LambertianMaterial:
-          Color: rgb [0.1, 0.99, 0.99]
+        Color: rgb [0.1, 0.99, 0.99]
     Low:
       ReflectMaterial:
         Color: rgb [0.99, 0.99, 0.99]
         Scatter: 0.02
     Ior: 1.5
-    Name: object
 Drawables:
 - Sphere:
     Position: vec [0, 0, 0]

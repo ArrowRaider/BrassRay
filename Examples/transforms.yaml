@@ -1,92 +1,86 @@
 Environment:
-  Color:
-    SkySampler:
+  SkySampler:
       HighColor: rgb [0.706, 0.835, 1]
       LowColor: rgb [1, 0.835, 0.706]
       SunColor: rgb [3.5, 3.5, 3.5]
       SunFalloff: 120
       SunDirection: vec [0.391, 0.651, 0.651]
 Materials:
-- SchlickMaterial:
+- Name: mat1
+  SchlickMaterial:
     High:
       ReflectMaterial:
         Color: rgb [0.8, 0.3, 0.3]
     Low:
+      Name: low
       ReflectMaterial:
         Color: rgb [0.98, 0.98, 0.98]
         Scatter: 0.02
     Ior: 1.5
-    Name: mat1
-- SchlickMaterial:
+- Name: mat2
+  SchlickMaterial:
     High:
       RefractMaterial:
         Color: rgb [0.3, 0.8, 0.3]
         Ior: 1.5
         Scatter: 0.02
-    Low:
-      ReflectMaterial:
-        Color: rgb [0.98, 0.98, 0.98]
-        Scatter: 0.02
+    Low: low
     Ior: 1.5
-    Name: mat2
-- SchlickMaterial:
+- Name: mat3
+  SchlickMaterial:
     High:
       LambertianMaterial:
         Color: rgb [0.3, 0.3, 0.8]
-    Low:
-      ReflectMaterial:
-        Color: rgb [0.98, 0.98, 0.98]
-        Scatter: 0.02
+    Low: low
     Ior: 1.5
-    Name: mat3
-- LambertianMaterial:
+- Name: ground
+  LambertianMaterial:
     Color: rgb [0.9, 0.9, 0.9]
-    Name: ground
 Transforms:
 - TranslateTransform:
-      Offset: vec [50, 15, 0]
-      Children:
-      - ScaleTransform:
-          Name: t1
-          Scale: vec [2, 1, 1]
-      - TranslateTransform:
-          Offset: vec[35, 5, -30]
-          Children:
-          - QuaternionTransform:
-              Name: t2
-              Angle: 45
-              Axis: vec [0, 1, 1]
-              Center: vec [0, 15, 0]
+    Offset: vec [50, 15, 0]
+  Children:
+  - Name: t1
+    ScaleTransform:
+      Scale: vec [2, 1, 1]
+  - TranslateTransform:
+      Offset: vec[35, 5, -30]
+    Children:
+    - Name: t2
+      QuaternionTransform:
+        Angle: 45
+        Axis: vec [0, 1, 1]
+        Center: vec [0, 15, 0]
 - TranslateTransform:
-      Offset: vec [-20, 10, 0]
+    Offset: vec [-20, 10, 0]
+  Children:
+  - Name: t3
+    RotateTransform:
+      Rotation: vec [0, 51.43, 0]
+    Children:
+    - Name: t4
+      RotateTransform:
+        Rotation: vec [0, 51.43, 0]
       Children:
-      - RotateTransform:
+      - Name: t5
+        RotateTransform:
           Rotation: vec [0, 51.43, 0]
-          Name: t3
+        Children:
+        - Name: t6
+          RotateTransform:
+            Rotation: vec [0, 51.43, 0]
           Children:
-          - RotateTransform:
+          - Name: t7
+            RotateTransform:
               Rotation: vec [0, 51.43, 0]
-              Name: t4
+            Children:
+            - Name: t8
+              RotateTransform:
+                Rotation: vec [0, 51.43, 0]
               Children:
-              - RotateTransform:
+              - Name: t9
+                RotateTransform:
                   Rotation: vec [0, 51.43, 0]
-                  Name: t5
-                  Children:
-                  - RotateTransform:
-                      Rotation: vec [0, 51.43, 0]
-                      Name: t6
-                      Children:
-                      - RotateTransform:
-                          Rotation: vec [0, 51.43, 0]
-                          Name: t7
-                          Children:
-                          - RotateTransform:
-                              Rotation: vec [0, 51.43, 0]
-                              Name: t8
-                              Children:
-                              - RotateTransform:
-                                  Rotation: vec [0, 51.43, 0]
-                                  Name: t9
 Drawables:
 - Sphere:
     Position: vec[0, 0, 0]

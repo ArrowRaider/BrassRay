@@ -8,8 +8,8 @@ namespace BrassRay.RayTracer.IO
     internal abstract class DrawableDto
     {
         public Vector3 Position { get; set; }
-        public string Material { get; set; }
-        public string Transform { get; set; }
+        public MaterialHolder Material { get; set; }
+        public List<TransformHolder> Transform { get; set; }
         public Projection TextureProjection { get; set; } = Projection.None;
     }
 

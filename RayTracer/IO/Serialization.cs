@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -11,218 +12,110 @@ namespace BrassRay.RayTracer.IO
 {
     public static class Serialization
     {
-        private static readonly Regex RgbExp = new (@"^rgb\s*\[\s*(\S+),\s*(\S+),\s*(\S+)\s*\]$");
-        private static readonly Regex VecExp = new (@"^vec\s*\[\s*(\S+),\s*(\S+),\s*(\S+)\s*\]$");
+        private static readonly Regex RgbExp = new(@"^rgb\s*\[\s*(\S+),\s*(\S+),\s*(\S+)\s*\]$");
+        private static readonly Regex VecExp = new(@"^vec\s*\[\s*(\S+),\s*(\S+),\s*(\S+)\s*\]$");
 
         private static float DegToRad(float x) => x * MathF.PI / 180.0f;
 
         private static Vector3 DegToRad(Vector3 x) =>
             new(x.X * MathF.PI / 180.0f, x.Y * MathF.PI / 180.0f, x.Z * MathF.PI / 180.0f);
+
         private static Vector3 RadToDeg(Vector3 x) =>
             new(x.X / MathF.PI * 180.0f, x.Y / MathF.PI * 180.0f, x.Z / MathF.PI * 180.0f);
-
-        // This mess returns a mapping between concrete-space and dto-space
-        private static IMapper CreateMapper(ColorModel colorModel)
+        
+        public static Scene ReadScene(string yamlString)
         {
-            var config = new MapperConfiguration(cfg =>
+            var deserializer = new DeserializerBuilder().Build();
+            var dto = deserializer.Deserialize<Dictionary<object, object>>(yamlString);
+            var dict = ConvertDictionaries(dto);
+            var colorModel = GetColorModel(dict);
+            
+            var baseProfile = new BaseProfile(colorModel);
+            var transformsProfile = new OuterTransformProfile(baseProfile);
+            var configuration = new MapperConfiguration(cfg =>
             {
-                cfg.CreateMap<Scene, SceneDto>()
-                    .ForMember(d => d.Materials,
-                        o => o.MapFrom((s, _) => s.Drawables.Select(x => x.Material).Distinct()))
-                    .ForMember(d => d.Transforms, o => o.Ignore())
-                    .AfterMap((s, d, c) =>
-                    {
-                        var dict = new Dictionary<Matrix4x4, MatrixTransformDto>();
-                        foreach (var (sd, dd) in s.Drawables.Zip(d.Drawables, (sd, dd) => (sd, dd)))
-                        {
-                            if (sd.Transform.IsIdentity) continue;
-                            if (!dict.TryGetValue(sd.Transform, out var dto))
-                                dict.Add(sd.Transform, dto = c.Mapper.Map<MatrixTransformDto>(sd.Transform));
-                            if (dd.Box != null) dd.Box.Transform = dto.Name;
-                            else if (dd.InfinitePlane != null) dd.InfinitePlane.Transform = dto.Name;
-                            else if (dd.Sphere != null) dd.Sphere.Transform = dto.Name;
-                        }
+                cfg.AddProfile(baseProfile);
+                cfg.AddProfile(transformsProfile);
+            });
+            var mapper = configuration.CreateMapper();
+            if (dict.TryGetValue("Transforms", out var rawTransforms))
+                mapper.Map<List<TransformHolder>>(rawTransforms);
 
-                        d.Transforms = new List<TransformHolder>();
-                        c.Mapper.Map(dict.Values.ToList(), d.Transforms);
-                    })
-                    .ReverseMap()
-                    .AfterMap((s, d, c) =>
-                    {
-                        var materials = c.Mapper.Map<List<Material>>(s.Materials);
-                        var drawableDtos = c.Mapper.Map<List<DrawableDto>>(s.Drawables);
-                        var materialDict = materials.ToDictionary(m => m.Name);
-                        var matrixDicts = BuildMatrixDict(s.Transforms, Matrix4x4.Identity, c);
-                        foreach (var (sd, dd) in drawableDtos.Zip(d.Drawables, (sd, dd) => (sd, dd)))
-                        {
-                            dd.Material = materialDict[sd.Material];
-                            if (!string.IsNullOrWhiteSpace(sd.Transform))
-                                dd.Transform = matrixDicts[sd.Transform];
-                        }
-                    });
+            var samplersProfile = new OuterSamplerProfile(baseProfile);
+            configuration = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(baseProfile);
+                cfg.AddProfile(transformsProfile);
+                cfg.AddProfile(samplersProfile);
+            });
+            mapper = configuration.CreateMapper();
+            if (dict.TryGetValue("Samplers", out var rawSamplers))
+                mapper.Map<List<SamplerHolder>>(rawSamplers);
 
-                cfg.CreateMap<Environment, EnvironmentDto>().ReverseMap();
+            var materialsProfile = new OuterMaterialProfile(baseProfile, samplersProfile);
+            configuration = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(baseProfile);
+                cfg.AddProfile(transformsProfile);
+                cfg.AddProfile(samplersProfile);
+                cfg.AddProfile(materialsProfile);
+            });
+            mapper = configuration.CreateMapper();
+            if (dict.TryGetValue("Materials", out var rawMaterials))
+                mapper.Map<List<MaterialHolder>>(rawMaterials);
+            var environmentDto = mapper.Map<SamplerHolder>(dict[nameof(SceneDto.Environment)]);
+            var cameraDto = mapper.Map<CameraHolder>(dict[nameof(SceneDto.Camera)]);
+            var drawablesDto = mapper.Map<List<DrawableHolder>>(dict[nameof(SceneDto.Drawables)]);
+            var sceneDto = new SceneDto
+                { Camera = cameraDto, ColorModel = colorModel, Drawables = drawablesDto, Environment = environmentDto };
 
-                cfg.CreateMap<Drawable, DrawableDto>()
-                    .ForMember(d => d.Material, o => o.MapFrom(s => s.Material.Name))
-                    .ForMember(d => d.Transform, o => o.Ignore())
-                    .Include<InfinitePlane, InfinitePlaneDto>()
-                    .Include<Box, BoxDto>()
-                    .Include<Sphere, SphereDto>()
-                    .ReverseMap().ForMember(d => d.Material, o => o.Ignore())
-                    .ForMember(d => d.Transform, o => o.Ignore());
-                cfg.CreateMap<InfinitePlane, InfinitePlaneDto>().ReverseMap();
-                cfg.CreateMap<Box, BoxDto>().ReverseMap();
-                cfg.CreateMap<Sphere, SphereDto>().ReverseMap();
-                cfg.CreateMap<Drawable, DrawableHolder>()
-                    .ForMember(d => d.InfinitePlane, o => o.MapFrom(s => s as InfinitePlane))
-                    .ForMember(d => d.Box, o => o.MapFrom(s => s as Box))
-                    .ForMember(d => d.Sphere, o => o.MapFrom(s => s as Sphere))
-                    .ReverseMap().ConvertUsing((s, d, c) =>
-                    {
-                        var item = c.Mapper.Map<DrawableDto>(s);
-                        return c.Mapper.Map(item, d);
-                    });
-                cfg.CreateMap<DrawableHolder, DrawableDto>()
-                    .ConvertUsing((s, _) => s.InfinitePlane ?? s.Box ?? (DrawableDto)s.Sphere);
+            configuration = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(baseProfile);
+                cfg.AddProfile(new CameraProfile());
+                cfg.AddProfile(new DrawableProfile());
+                cfg.AddProfile(new MaterialProfile());
+                cfg.AddProfile(new SamplerProfile());
+                cfg.AddProfile(new TransformProfile());
+                cfg.AddProfile(new SceneProfile());
+            });
+            mapper = configuration.CreateMapper();
 
-                cfg.CreateMap<Material, MaterialDto>()
-                    .Include<EmissiveMaterial, EmissiveMaterialDto>()
-                    .Include<FastDiffuseMaterial, FastDiffuseMaterialDto>()
-                    .Include<LambertianMaterial, LambertianMaterialDto>()
-                    .Include<ReflectMaterial, ReflectMaterialDto>()
-                    .Include<RefractMaterial, RefractMaterialDto>()
-                    .Include<SchlickMaterial, SchlickMaterialDto>()
-                    .ReverseMap();
-                cfg.CreateMap<EmissiveMaterial, EmissiveMaterialDto>().ReverseMap();
-                cfg.CreateMap<FastDiffuseMaterial, FastDiffuseMaterialDto>().ReverseMap();
-                cfg.CreateMap<LambertianMaterial, LambertianMaterialDto>().ReverseMap();
-                cfg.CreateMap<ReflectMaterial, ReflectMaterialDto>().ReverseMap();
-                cfg.CreateMap<RefractMaterial, RefractMaterialDto>().ReverseMap();
-                cfg.CreateMap<SchlickMaterial, SchlickMaterialDto>().ReverseMap();
-                cfg.CreateMap<Material, MaterialHolder>()
-                    .ForMember(d => d.EmissiveMaterial, o => o.MapFrom(s => s as EmissiveMaterial))
-                    .ForMember(d => d.FastDiffuseMaterial, o => o.MapFrom(s => s as FastDiffuseMaterial))
-                    .ForMember(d => d.LambertianMaterial, o => o.MapFrom(s => s as LambertianMaterial))
-                    .ForMember(d => d.ReflectMaterial, o => o.MapFrom(s => s as ReflectMaterial))
-                    .ForMember(d => d.RefractMaterial, o => o.MapFrom(s => s as RefractMaterial))
-                    .ForMember(d => d.SchlickMaterial, o => o.MapFrom(s => s as SchlickMaterial))
-                    .ReverseMap().ConvertUsing((s, d, c) =>
-                    {
-                        var item = s.EmissiveMaterial ?? s.FastDiffuseMaterial ?? s.LambertianMaterial ??
-                            s.ReflectMaterial ?? s.RefractMaterial ?? (MaterialDto)s.SchlickMaterial;
-                        return c.Mapper.Map(item, d);
-                    });
+            return mapper.Map<Scene>(sceneDto);
+            
+        }
 
-                cfg.CreateMap<Camera, CameraDto>()
-                    .Include<TargetCamera, TargetCameraDto>()
-                    .Include<OrthographicCamera, OrthographicCameraDto>()
-                    .Include<SphericalCamera, SphericalCameraDto>().ReverseMap();
-                cfg.CreateMap<TargetCamera, TargetCameraDto>().ReverseMap();
-                cfg.CreateMap<OrthographicCamera, OrthographicCameraDto>().ReverseMap();
-                cfg.CreateMap<SphericalCamera, SphericalCameraDto>()
-                    .ForMember(d => d.Rotation, o => o.MapFrom(s => RadToDeg(s.Rotation)))
-                    .ReverseMap().ForMember(d => d.Rotation, o => o.MapFrom(s => DegToRad(s.Rotation)));
-                cfg.CreateMap<Camera, CameraHolder>()
-                    .ForMember(d => d.TargetCamera, o => o.MapFrom(s => s as TargetCamera))
-                    .ForMember(d => d.OrthographicCamera, o => o.MapFrom(s => s as OrthographicCamera))
-                    .ForMember(d => d.SphericalCamera, o => o.MapFrom(s => s as SphericalCamera))
-                    .ReverseMap().ConvertUsing((s, d, c) =>
-                    {
-                        var item = s.TargetCamera ?? s.OrthographicCamera ?? (CameraDto)s.SphericalCamera;
-                        return c.Mapper.Map(item, d);
-                    });
+        public static string WriteScene(Scene scene)
+        {
+            throw new NotImplementedException();
+        }
 
-                cfg.CreateMap<TransformHolder, TransformDto>().ConvertUsing((s, _) =>
-                    s.RotateTransform ?? s.ScaleTransform ??
-                    s.TranslateTransform ?? s.QuaternionTransform ?? (TransformDto)s.MatrixTransform);
+        private static ColorModel GetColorModel(Dictionary<string, object> dict)
+        {
+            if (!dict.TryGetValue(nameof(Scene.ColorModel), out var rawColorModel)) return new ColorModel();
+            var configuration = new MapperConfiguration(cfg => { });
+            var mapper = configuration.CreateMapper();
+            return mapper.Map<ColorModel>(rawColorModel);
+        }
 
-                // TODO: Decompose transform matrices
-                cfg.CreateMap<Matrix4x4, MatrixTransformDto>()
-                    .ForMember(d => d.Children, o => o.Ignore())
-                    .ForMember(d => d.Name, o => o.MapFrom(_ => Guid.NewGuid().ToString()));
-                cfg.CreateMap<MatrixTransformDto, TransformHolder>()
-                    .ForMember(d => d.MatrixTransform, o => o.MapFrom(d => d))
-                    .ForMember(d => d.QuaternionTransform, o => o.Ignore())
-                    .ForMember(d => d.RotateTransform, o => o.Ignore())
-                    .ForMember(d => d.ScaleTransform, o => o.Ignore())
-                    .ForMember(d => d.TranslateTransform, o => o.Ignore());
-                cfg.CreateMap<Matrix4x4, TransformHolder>()
-                    .ConvertUsing((s, d, c) =>
-                    {
-                        var dto = c.Mapper.Map<MatrixTransformDto>(s);
-                        return c.Mapper.Map(dto, d);
-                    });
-                cfg.CreateMap<TransformHolder, Matrix4x4>()
-                    .ConvertUsing((s, d, c) =>
-                    {
-                        if (s == null) return Matrix4x4.Identity;
-                        var dto = c.Mapper.Map<TransformDto>(s);
-                        return c.Mapper.Map(dto, d);
-                    });
-
-                cfg.CreateMap<List<TransformHolder>, Matrix4x4>()
-                    .ConvertUsing((s, d, c) =>
-                    {
-                        if (s == null || s.Count == 0) return Matrix4x4.Identity;
-                        var dtos = c.Mapper.Map<List<TransformDto>>(s);
-                        var matrices = c.Mapper.Map<List<Matrix4x4>>(dtos);
-                        return matrices.Aggregate((left, right) => left * right);
-                    });
-                cfg.CreateMap<Matrix4x4, List<TransformHolder>> ()
-                    .ConvertUsing((s, d, c) =>
-                    {
-                        throw new NotImplementedException();
-                    });
-
-                cfg.CreateMap<Sampler, SamplerDto>()
-                    .Include<SolidSampler, SolidSamplerDto>()
-                    .Include<CheckerSampler, CheckerSamplerDto>()
-                    .Include<SkySampler, SkySamplerDto>()
-                    .Include<RainbowSampler, RainbowSamplerDto>().ReverseMap();
-                cfg.CreateMap<SolidSampler, SolidSamplerDto>().ReverseMap();
-                cfg.CreateMap<CheckerSampler, CheckerSamplerDto>().ReverseMap();
-                cfg.CreateMap<SkySampler, SkySamplerDto>().ReverseMap();
-                cfg.CreateMap<RainbowSampler, RainbowSamplerDto>().ReverseMap();
-                cfg.CreateMap<Sampler, SamplerHolder>()
-                    .ForMember(d => d.CheckerSampler, o => o.MapFrom(s => s as CheckerSampler))
-                    .ForMember(d => d.SolidSampler, o => o.MapFrom(s => s as SolidSampler))
-                    .ForMember(d => d.SkySampler, o => o.MapFrom(s => s as SkySampler))
-                    .ForMember(d => d.RainbowSampler, o => o.MapFrom(s => s as RainbowSampler))
-                    .ReverseMap().ConvertUsing((s, d, c) =>
-                    {
-                        var item = s.CheckerSampler ?? s.SolidSampler ?? s.SkySampler ?? (SamplerDto)s.RainbowSampler;
-                        return c.Mapper.Map(item, d);
-                    });
-
-                cfg.CreateMap<string, SamplerHolder>().ConvertUsing((s, _, _) =>
+        private static Dictionary<string, object> ConvertDictionaries(Dictionary<object, object> d) =>
+            d.ToDictionary(p => p.Key.ToString(),
+                p => p.Value switch
                 {
-                    Match match;
-                    if ((match = RgbExp.Match(s)).Success &&
-                        float.TryParse(match.Groups[1].Value, out var r) &&
-                        float.TryParse(match.Groups[2].Value, out var g) &&
-                        float.TryParse(match.Groups[3].Value, out var b))
-                        return new SamplerHolder { SolidSampler = new SolidSamplerDto { Color = new Rgb(r, g, b) } };
-                    if ((match = VecExp.Match(s)).Success &&
-                        float.TryParse(match.Groups[1].Value, out var x) &&
-                        float.TryParse(match.Groups[2].Value, out var y) &&
-                        float.TryParse(match.Groups[3].Value, out var z))
-                        return new SamplerHolder { SolidSampler = new SolidSamplerDto { Color = new Vector3(x, y, z) } };
-                    throw new InvalidDataException();
-                });
-                cfg.CreateMap<object, Sampler>().ConvertUsing((s, d, c) =>
-                {
-                    var item = s switch
-                    {
-                        Dictionary<object, object> dict => c.Mapper.Map<SamplerHolder>(ConvertDictionaries(dict)),
-                        string str => c.Mapper.Map<SamplerHolder>(str),
-                        _ => throw new NotSupportedException()
-                    };
-                    
-                    return c.Mapper.Map(item, d);
+                    Dictionary<object, object> dNext => ConvertDictionaries(dNext),
+                    List<object> list => list.Select(el =>
+                        el is Dictionary<object, object> elDNext ? ConvertDictionaries(elDNext) : el).ToList(),
+                    _ => p.Value
                 });
 
-                cfg.CreateMap<string, Vector3>().ConvertUsing((s, d, c) =>
+        private class BaseProfile : Profile
+        {
+            public BaseProfile(ColorModel colorModel)
+            {
+                CreateMap<Vector3, Rgb>().ConvertUsing(s => colorModel.VectorToRgb(s));
+                CreateMap<Rgb, Vector3>().ConvertUsing(s => colorModel.RgbToVector(s));
+
+                CreateMap<string, Vector3>().ConvertUsing((s, d, c) =>
                 {
                     Match match;
                     if ((match = RgbExp.Match(s)).Success &&
@@ -233,6 +126,7 @@ namespace BrassRay.RayTracer.IO
                         var item = new Rgb(r, g, b);
                         return c.Mapper.Map(item, d);
                     }
+
                     if ((match = VecExp.Match(s)).Success &&
                         float.TryParse(match.Groups[1].Value, out var x) &&
                         float.TryParse(match.Groups[2].Value, out var y) &&
@@ -241,19 +135,232 @@ namespace BrassRay.RayTracer.IO
                     throw new InvalidDataException();
                 });
 
-                cfg.CreateMap<Vector3, Rgb>().ConvertUsing(s => colorModel.VectorToRgb(s));
-                cfg.CreateMap<Rgb, Vector3>().ConvertUsing(s => colorModel.RgbToVector(s));
+                CreateMap<string, Rgb>().ConvertUsing((s, d, c) =>
+                {
+                    Match match;
+                    if ((match = RgbExp.Match(s)).Success &&
+                        float.TryParse(match.Groups[1].Value, out var r) &&
+                        float.TryParse(match.Groups[2].Value, out var g) &&
+                        float.TryParse(match.Groups[3].Value, out var b))
+                        return new Rgb(r, g, b);
+                    if ((match = VecExp.Match(s)).Success &&
+                        float.TryParse(match.Groups[1].Value, out var x) &&
+                        float.TryParse(match.Groups[2].Value, out var y) &&
+                        float.TryParse(match.Groups[3].Value, out var z))
+                    {
+                        var item = new Vector3(x, y, z);
+                        return c.Mapper.Map(item, d);
+                    }
 
-                cfg.CreateMap<TransformDto, Matrix4x4>().ConvertUsing((s, _, _) => s switch
+                    throw new InvalidDataException();
+                });
+            }
+
+            public static bool IsVector3(string s) => VecExp.IsMatch(s);
+            public static bool IsRgb(string s) => RgbExp.IsMatch(s);
+        }
+
+        private class OuterTransformProfile : Profile
+        {
+            public OuterTransformProfile(BaseProfile baseProfile)
+            {
+                var innerMapper = new MapperConfiguration(cfg => { cfg.AddProfile(baseProfile); }).CreateMapper();
+
+                CreateMap<Dictionary<string, object>, TransformHolder>()
+                    .ConstructUsing(s => innerMapper.Map<TransformHolder>(s)).AfterMap((_, d, c) =>
+                    {
+                        BuildDictionary(Enumerable.Repeat(d, 1), Lookup);
+                    });
+
+                CreateMap<string, List<TransformHolder>>().ConstructUsing(s => Lookup[s]);
+            }
+
+            public Dictionary<string, List<TransformHolder>> Lookup { get; } = new();
+
+            private static void BuildDictionary(
+                IEnumerable<TransformHolder> holders,
+                IDictionary<string, List<TransformHolder>> dict,
+                ImmutableStack<TransformHolder> current = null)
+            {
+                current ??= ImmutableStack<TransformHolder>.Empty;
+
+                foreach (var holder in holders)
+                {
+                    var next = current.Push(holder);
+                    if (!string.IsNullOrWhiteSpace(holder.Name))
+                        dict.TryAdd(holder.Name, next.ToList());
+                    BuildDictionary(holder.Children ?? Enumerable.Empty<TransformHolder>(), dict, next);
+                }
+            }
+        }
+
+        private class OuterSamplerProfile : Profile
+        {
+            public OuterSamplerProfile(BaseProfile baseProfile)
+            {
+
+                var innerMapper = new MapperConfiguration(cfg =>
+                {
+                    cfg.AddProfile(baseProfile);
+                    cfg.CreateMap<string, SamplerHolder>().ConstructUsing((s, c) =>
+                        Lookup.TryGetValue(s, out var sampler)
+                            ? sampler
+                            : new SamplerHolder
+                                { SolidSampler = new SolidSamplerDto { Color = c.Mapper.Map<Rgb>(s) } });
+                }).CreateMapper();
+
+                CreateMap<Dictionary<string, object>, SamplerHolder>()
+                    .ConstructUsing(s => innerMapper.Map<SamplerHolder>(s))
+                    .AfterMap((_, d) => BuildDictionary(d, Lookup));
+
+                CreateMap<string, SamplerHolder>().ConstructUsing((s, c) =>
+                    Lookup.TryGetValue(s, out var sampler)
+                        ? sampler
+                        : new SamplerHolder { SolidSampler = new SolidSamplerDto { Color = c.Mapper.Map<Rgb>(s) } });
+            }
+
+            private static void BuildDictionary(SamplerHolder holder, IDictionary<string, SamplerHolder> dict)
+            {
+                if (holder is null) return;
+                if (!string.IsNullOrWhiteSpace(holder.Name))
+                    dict.TryAdd(holder.Name, holder);
+                BuildDictionary(holder.CheckerSampler?.Color1, dict);
+                BuildDictionary(holder.CheckerSampler?.Color2, dict);
+                BuildDictionary(holder.RainbowSampler?.XColor, dict);
+                BuildDictionary(holder.RainbowSampler?.YColor, dict);
+                BuildDictionary(holder.RainbowSampler?.ZColor, dict);
+                BuildDictionary(holder.SkySampler?.HighColor, dict);
+                BuildDictionary(holder.SkySampler?.LowColor, dict);
+                BuildDictionary(holder.SkySampler?.SunColor, dict);
+            }
+
+            public Dictionary<string, SamplerHolder> Lookup { get; } = new();
+        }
+
+        private class OuterMaterialProfile : Profile
+        {
+            public OuterMaterialProfile(BaseProfile baseProfile, OuterSamplerProfile outerSamplerProfile)
+            {
+                var innerMapper = new MapperConfiguration(cfg =>
+                {
+                    cfg.AddProfile(baseProfile);
+                    cfg.AddProfile(outerSamplerProfile);
+                    cfg.CreateMap<string, MaterialHolder>().ConstructUsing(s => Lookup[s]);
+                }).CreateMapper();
+
+                CreateMap<Dictionary<string, object>, MaterialHolder>()
+                    .ConstructUsing(s => innerMapper.Map<MaterialHolder>(s))
+                    .AfterMap((_, d) => BuildDictionary(d, Lookup));
+
+                CreateMap<string, MaterialHolder>().ConstructUsing(s => Lookup[s]);
+            }
+
+            private static void BuildDictionary(MaterialHolder holder, IDictionary<string, MaterialHolder> dict)
+            {
+                if (holder is null) return;
+                if (!string.IsNullOrWhiteSpace(holder.Name))
+                    dict.TryAdd(holder.Name, holder);
+                BuildDictionary(holder.SchlickMaterial?.High, dict);
+                BuildDictionary(holder.SchlickMaterial?.Low, dict);
+            }
+
+            public Dictionary<string, MaterialHolder> Lookup { get; } = new();
+        }
+
+        private class CameraProfile : Profile
+        {
+            public CameraProfile()
+            {
+                CreateMap<CameraDto, Camera>()
+                    .Include<TargetCameraDto, TargetCamera>()
+                    .Include<OrthographicCameraDto, OrthographicCamera>()
+                    .Include<SphericalCameraDto, SphericalCamera>();
+                CreateMap<TargetCameraDto, TargetCamera>();
+                CreateMap<OrthographicCameraDto, OrthographicCamera>();
+                CreateMap<SphericalCameraDto, SphericalCamera>();
+                CreateMap<CameraHolder, CameraDto>().ConstructUsing(s =>
+                    s.OrthographicCamera ?? s.SphericalCamera ?? (CameraDto)s.TargetCamera);
+                CreateMap<CameraHolder, Camera>()
+                    .ConvertUsing((s, d, c) => c.Mapper.Map(c.Mapper.Map<CameraDto>(s), d));
+            }
+        }
+
+        private class DrawableProfile : Profile
+        {
+            public DrawableProfile()
+            {
+                CreateMap<DrawableDto, Drawable>()
+                    .Include<InfinitePlaneDto, InfinitePlane>()
+                    .Include<BoxDto, Box>()
+                    .Include<SphereDto, Sphere>();
+                CreateMap<InfinitePlaneDto, InfinitePlane>();
+                CreateMap<BoxDto, Box>();
+                CreateMap<SphereDto, Sphere>();
+                CreateMap<DrawableHolder, DrawableDto>()
+                    .ConstructUsing(s => s.Box ?? s.InfinitePlane ?? (DrawableDto)s.Sphere);
+                CreateMap<DrawableHolder, Drawable>()
+                    .ConvertUsing((s, d, c) => c.Mapper.Map(c.Mapper.Map<DrawableDto>(s), d));
+            }
+        }
+
+        private class MaterialProfile : Profile
+        {
+            public MaterialProfile()
+            {
+                CreateMap<MaterialDto, Material>()
+                    .Include<EmissiveMaterialDto, EmissiveMaterial>()
+                    .Include<FastDiffuseMaterialDto, FastDiffuseMaterial>()
+                    .Include<LambertianMaterialDto, LambertianMaterial>()
+                    .Include<ReflectMaterialDto, ReflectMaterial>()
+                    .Include<RefractMaterialDto, RefractMaterial>()
+                    .Include<SchlickMaterialDto, SchlickMaterial>();
+                CreateMap<EmissiveMaterialDto, EmissiveMaterial>();
+                CreateMap<FastDiffuseMaterialDto, FastDiffuseMaterial>();
+                CreateMap<LambertianMaterialDto, LambertianMaterial>();
+                CreateMap<ReflectMaterialDto, ReflectMaterial>();
+                CreateMap<RefractMaterialDto, RefractMaterial>();
+                CreateMap<SchlickMaterialDto, SchlickMaterial>();
+                CreateMap<MaterialHolder, MaterialDto>().ConstructUsing(s =>
+                    s.EmissiveMaterial ?? s.FastDiffuseMaterial ?? s.LambertianMaterial ??
+                    s.ReflectMaterial ?? s.RefractMaterial ?? (MaterialDto)s.SchlickMaterial);
+                CreateMap<MaterialHolder, Material>()
+                    .ConvertUsing((s, d, c) => c.Mapper.Map(c.Mapper.Map<MaterialDto>(s), d));
+            }
+        }
+
+        private class SamplerProfile : Profile
+        {
+            public SamplerProfile()
+            {
+                CreateMap<SamplerDto, Sampler>()
+                    .Include<SolidSamplerDto, SolidSampler>()
+                    .Include<CheckerSamplerDto, CheckerSampler>()
+                    .Include<SkySamplerDto, SkySampler>()
+                    .Include<RainbowSamplerDto, RainbowSampler>();
+                CreateMap<SolidSamplerDto, SolidSampler>();
+                CreateMap<CheckerSamplerDto, CheckerSampler>();
+                CreateMap<SkySamplerDto, SkySampler>();
+                CreateMap<RainbowSamplerDto, RainbowSampler>();
+                CreateMap<SamplerHolder, SamplerDto>().ConstructUsing(s =>
+                    s.CheckerSampler ?? s.RainbowSampler ?? s.SkySampler ?? (SamplerDto)s.SolidSampler);
+                CreateMap<SamplerHolder, Sampler>()
+                    .ConvertUsing((s, d, c) => c.Mapper.Map(c.Mapper.Map<SamplerDto>(s), d));
+            }
+        }
+
+        private class TransformProfile : Profile
+        {
+            public TransformProfile()
+            {
+                CreateMap<TransformDto, Matrix4x4>().ConstructUsing((s, _) => s switch
                 {
                     RotateTransformDto x when x.Center.HasValue =>
                         Matrix4x4.CreateTranslation(-x.Center.Value) *
                         Matrix4x4.CreateFromYawPitchRoll(DegToRad(x.Rotation.Y), DegToRad(x.Rotation.X),
                             DegToRad(x.Rotation.Z)) *
                         Matrix4x4.CreateTranslation(x.Center.Value),
-                    RotateTransformDto x => Matrix4x4.CreateRotationZ(DegToRad(x.Rotation.Z)) *
-                                            Matrix4x4.CreateRotationY(DegToRad(x.Rotation.Y)) *
-                                            Matrix4x4.CreateRotationX(DegToRad(x.Rotation.X)),
+                    RotateTransformDto x => Matrix4x4.CreateFromYawPitchRoll(DegToRad(x.Rotation.Y), DegToRad(x.Rotation.X),
+                        DegToRad(x.Rotation.Z)),
                     ScaleTransformDto x when x.Center.HasValue => Matrix4x4.CreateScale(x.Scale, x.Center.Value),
                     ScaleTransformDto x => Matrix4x4.CreateScale(x.Scale),
                     TranslateTransformDto x => Matrix4x4.CreateTranslation(x.Offset),
@@ -268,57 +375,26 @@ namespace BrassRay.RayTracer.IO
                         x.M32, x.M33, x.M34, x.M41, x.M42, x.M43, x.M44),
                     _ => throw new InvalidOperationException()
                 });
-            });
-#if DEBUG
-            config.AssertConfigurationIsValid();
-#endif
-            return config.CreateMapper();
-        }
-        
-        public static Scene ReadScene(string yamlString)
-        {
-            var deserializer = new DeserializerBuilder().WithTypeConverter(new Vector3Converter())
-                .WithTypeConverter(new RgbConverter()).Build();
-            var dto = deserializer.Deserialize<SceneDto>(yamlString);
-            
-            return CreateMapper(dto.ColorModel).Map<Scene>(dto);
-        }
-
-        public static string WriteScene(Scene scene)
-        {
-            var dto = CreateMapper(scene.ColorModel).Map<SceneDto>(scene);
-            var serializer = new SerializerBuilder().WithTypeConverter(new Vector3Converter())
-                .WithTypeConverter(new RgbConverter())
-                .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull).Build();
-            return serializer.Serialize(dto);
-        }
-
-        private static Dictionary<string, Matrix4x4> BuildMatrixDict(IEnumerable<TransformHolder> transformHolders,
-            Matrix4x4 matrix, ResolutionContext c, Dictionary<string, Matrix4x4> dict = null)
-        {
-            dict ??= new Dictionary<string, Matrix4x4>();
-
-            var transformDtos = c.Mapper.Map<List<TransformDto>>(transformHolders);
-            foreach (var transformDto in transformDtos)
-            {
-                var nextMatrix = c.Mapper.Map<Matrix4x4>(transformDto);
-                var compositeMatrix = nextMatrix * matrix;
-                if (!string.IsNullOrWhiteSpace(transformDto.Name))
-                    dict.Add(transformDto.Name, compositeMatrix);
-                BuildMatrixDict(transformDto.Children, compositeMatrix, c, dict);
+                CreateMap<TransformHolder, TransformDto>().ConstructUsing(s =>
+                    s.MatrixTransform ?? s.QuaternionTransform ??
+                    s.RotateTransform ?? s.ScaleTransform ?? (TransformDto)s.TranslateTransform);
+                CreateMap<List<TransformHolder>, Matrix4x4>()
+                    .ConvertUsing((s, _, c) =>
+                    {
+                        if (s == null || s.Count == 0) return Matrix4x4.Identity;
+                        var dtos = c.Mapper.Map<List<TransformDto>>(s);
+                        var matrices = c.Mapper.Map<List<Matrix4x4>>(dtos);
+                        return matrices.Aggregate((left, right) => left * right);
+                    });
             }
-
-            return dict;
         }
 
-        private static Dictionary<string, object> ConvertDictionaries(Dictionary<object, object> d) =>
-            d.ToDictionary(p => p.Key.ToString(),
-                p => p.Value switch
-                {
-                    Dictionary<object, object> dNext => ConvertDictionaries(dNext),
-                    List<object> list => list.Select(el =>
-                        el is Dictionary<object, object> elDNext ? ConvertDictionaries(elDNext) : el).ToList(),
-                    _ => p.Value
-                });
+        private class SceneProfile : Profile
+        {
+            public SceneProfile()
+            {
+                CreateMap<SceneDto, Scene>();
+            }
+        }
     }
 }

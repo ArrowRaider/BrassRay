@@ -5,11 +5,7 @@ using System.Text;
 
 namespace BrassRay.RayTracer.IO
 {
-    internal class TransformDto
-    {
-        public string Name { get; set; }
-        public List<TransformHolder> Children { get; set; }
-    }
+    internal class TransformDto { }
 
     internal class ScaleTransformDto : TransformDto
     {
@@ -64,10 +60,12 @@ namespace BrassRay.RayTracer.IO
 
     internal class TransformHolder
     {
+        public string Name { get; set; }
         public ScaleTransformDto ScaleTransform { get; set; }
         public RotateTransformDto RotateTransform { get; set; }
         public TranslateTransformDto TranslateTransform { get; set; }
         public QuaternionTransformDto QuaternionTransform { get; set; }
         public MatrixTransformDto MatrixTransform { get; set; }
+        public List<TransformHolder> Children { get; set; }
     }
 }

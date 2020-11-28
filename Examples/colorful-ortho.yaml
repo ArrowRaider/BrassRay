@@ -1,122 +1,98 @@
 Environment:
-  Color:
-    SkySampler:
-      HighColor: rgb [0.706, 0.835, 1]
-      LowColor: rgb [1, 0.835, 0.706]
-      SunColor: rgb [3.5, 3.5, 3.5]
-      SunFalloff: 120
-      SunDirection: vec [0.391, 0.651, 0.651]
+  SkySampler:
+    HighColor: rgb [0.706, 0.835, 1]
+    LowColor: rgb [1, 0.835, 0.706]
+    SunColor: rgb [3.5, 3.5, 3.5]
+    SunFalloff: 120
+    SunDirection: vec [0.391, 0.651, 0.651]
 Materials:
-- SchlickMaterial:
+- Name: mat1
+  SchlickMaterial:
     High:
       RefractMaterial:
         Color: rgb [0.941, 0.0784, 0.941]
         Ior: 1.5
         Scatter: 0.02
     Low:
+      Name: low
       ReflectMaterial:
         Color: rgb [0.98, 0.98, 0.98]
         Scatter: 0.02
     Ior: 1.5
-    Name: mat1
-- SchlickMaterial:
+- Name: mat2
+  SchlickMaterial:
     High:
       RefractMaterial:
         Color: rgb [0.0784, 0.0784, 0.941]
         Ior: 1.5
         Scatter: 0.02
-    Low:
-      ReflectMaterial:
-        Color: rgb [0.98, 0.98, 0.98]
-        Scatter: 0.02
+    Low: low
     Ior: 1.5
-    Name: mat2
-- SchlickMaterial:
+- Name: mat3
+  SchlickMaterial:
     High:
       RefractMaterial:
         Color: rgb [0.941, 0.0784, 0.0784]
         Ior: 1.5
         Scatter: 0.02
-    Low:
-      ReflectMaterial:
-        Color: rgb [0.98, 0.98, 0.98]
-        Scatter: 0.02
+    Low: low
     Ior: 1.5
-    Name: mat3
-- SchlickMaterial:
+- Name: mat4
+  SchlickMaterial:
     High:
       RefractMaterial:
         Color: rgb [0.0784, 0.941, 0.0784]
         Ior: 1.5
         Scatter: 0.02
-    Low:
-      ReflectMaterial:
-        Color: rgb [0.98, 0.98, 0.98]
-        Scatter: 0.02
+    Low: low
     Ior: 1.5
-    Name: mat4
-- SchlickMaterial:
+- Name: mat5
+  SchlickMaterial:
     High:
       RefractMaterial:
         Color: rgb [0.0784, 0.941, 0.941]
         Ior: 1.5
         Scatter: 0.02
-    Low:
-      ReflectMaterial:
-        Color: rgb [0.98, 0.98, 0.98]
-        Scatter: 0.02
+    Low: low
     Ior: 1.5
-    Name: mat5
-- SchlickMaterial:
+- Name: mat6
+  SchlickMaterial:
     High:
       RefractMaterial:
         Color: rgb [0.941, 0.941, 0.0784]
         Ior: 1.5
         Scatter: 0.02
-    Low:
-      ReflectMaterial:
-        Color: rgb [0.98, 0.98, 0.98]
-        Scatter: 0.02
+    Low: low
     Ior: 1.5
-    Name: mat6
-- SchlickMaterial:
+- Name: mat7
+  SchlickMaterial:
     High:
       RefractMaterial:
         Color: rgb [0.808, 0.808, 0.808]
         Ior: 1.5
         Scatter: 0.02
-    Low:
-      ReflectMaterial:
-        Color: rgb [0.98, 0.98, 0.98]
-        Scatter: 0.02
+    Low: low
     Ior: 1.5
-    Name: mat7
-- SchlickMaterial:
+- Name: mat8
+  SchlickMaterial:
     High:
       ReflectMaterial:
         Color: rgb [0.808, 0.808, 0.808]
         Scatter: 0.02
-    Low:
-      ReflectMaterial:
-        Color: rgb [0.98, 0.98, 0.98]
-        Scatter: 0.02
+    Low: low
     Ior: 2.5
-    Name: mat8
-- LambertianMaterial:
-    Color: rgb [0.627, 0.627, 0.627]
-    Name: mat9
-- SchlickMaterial:
+- Name: mat9
+  SchlickMaterial:
     High:
       RefractMaterial:
         Color: rgb [0.725, 0.478, 0.341]
         Ior: 1.5
         Scatter: 0.02
-    Low:
-      ReflectMaterial:
-        Color: rgb [0.98, 0.98, 0.98]
-        Scatter: 0.02
+    Low: low
     Ior: 1.2
-    Name: mat10
+- Name: ground
+  LambertianMaterial:
+    Color: rgb [0.627, 0.627, 0.627]  
 Drawables:
 - Sphere:
     Position: vec [14, -8, 10]
@@ -155,11 +131,11 @@ Drawables:
     Width: 30
     Height: 30
     Depth: 30
-    Material: mat10
+    Material: mat9
 - InfinitePlane:
     Position: vec [0, -14.01, 0]
     Normal: vec [0, 1, 0]
-    Material: mat9
+    Material: ground
 Camera:
   OrthographicCamera:
     Position: vec [-77, 87, -1039]

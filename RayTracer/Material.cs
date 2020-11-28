@@ -6,8 +6,6 @@ namespace BrassRay.RayTracer
 {
     public abstract class Material
     {
-        public string Name { get; set; }
-
         // not sure if this should be made virtual
         protected abstract Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, ShadeState state);
 

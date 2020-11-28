@@ -11,7 +11,7 @@ namespace BrassRay.RayTracer
         private const int MinBspLeafSize = 3;
 
         public List<Drawable> Drawables { get; } = new();
-        public Environment Environment { get; set; }
+        public Sampler Environment { get; set; }
         public Camera Camera { get; set; }
         public ColorModel ColorModel { get; set; } = new();
 
@@ -43,9 +43,12 @@ namespace BrassRay.RayTracer
                 return Vector3.Zero;
 
             var m = ClosestIntersection(ray);
-            return m?.Drawable.Material.Shade(ray, this, m.Value, state) ?? (state.Depth >= Utils.DefaultDepth
-                ? ColorModel.InFactor * ColorModel.EnvironmentBackgroundFactor * Environment.Shade(ray)
-                : Environment.Shade(ray));
+            if (m != null)
+                return m.Value.Drawable.Material.Shade(ray, this, m.Value, state);
+            var env = Environment.Sample(ray.UnitDirection);
+            return state.Depth >= Utils.DefaultDepth
+                ? ColorModel.InFactor * ColorModel.EnvironmentBackgroundFactor * env
+                : env;
         }
 
         /// <summary>

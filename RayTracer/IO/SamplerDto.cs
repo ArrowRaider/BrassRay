@@ -14,7 +14,7 @@ namespace BrassRay.RayTracer.IO
 
     internal class SolidSamplerDto : SamplerDto
     {
-        public dynamic Color { get; set; }
+        public Rgb Color { get; set; }
     }
 
     internal class CheckerSamplerDto : SamplerDto
@@ -28,7 +28,7 @@ namespace BrassRay.RayTracer.IO
         public SamplerHolder HighColor { get; set; }
         public SamplerHolder LowColor { get; set; }
         public SamplerHolder SunColor { get; set; }
-        public string SunDirection { get; set; }
+        public Vector3 SunDirection { get; set; }
     }
 
     internal class RainbowSamplerDto : SamplerDto
@@ -41,6 +41,7 @@ namespace BrassRay.RayTracer.IO
 
     internal class SamplerHolder
     {
+        public string Name { get; set; }
         public SolidSamplerDto SolidSampler { get; set; }
         public CheckerSamplerDto CheckerSampler { get; set; }
         public SkySamplerDto SkySampler { get; set; }

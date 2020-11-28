@@ -27,7 +27,7 @@ namespace BrassRay.RayTracer.IO
         public Vector3 Position { get; set; }
         public Vector3 Direction { get; set; }
         public Vector3 Up { get; set; }
-        public float ViewHeight { get; set; }
+        public decimal ViewHeight { get; set; }
     }
 
     internal class SphericalCameraDto : CameraDto
