@@ -59,6 +59,8 @@ namespace BrassRay.RayTracer
             // join the drawables and bounds as one entity
             var tuples = Drawables.Where(d => d.ObjectBounds != BoundingBox.Zero)
                 .Select(d => (d, d.GetBounds())).ToArray();
+            _nonBsp = Drawables.Where(d => d.ObjectBounds == BoundingBox.Zero).ToArray();
+            if (tuples.Length == 0) return;
 
             // calculate scene-wide bounding box
             var left = tuples.Select(t => t.Item2.Position.X - t.Item2.Width / 2.0f).Min();
@@ -71,7 +73,6 @@ namespace BrassRay.RayTracer
             var bounds = new BoundingBox(position, right - left, top - bottom, front - back);
             
             _bsp = BuildBsp(tuples, bounds);
-            _nonBsp = Drawables.Where(d => d.ObjectBounds == BoundingBox.Zero).ToArray();
         }
 
         // using the BSP, find the closest intersection
@@ -137,6 +138,8 @@ namespace BrassRay.RayTracer
                         min = ClosestIntersection(ray, second, visited, drawables, visitedIndex, min);
                     return min;
                 }
+                case null:
+                    return null;
                 default:
                     throw new InvalidOperationException();
             }
