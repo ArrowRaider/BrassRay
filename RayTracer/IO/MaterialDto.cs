@@ -42,6 +42,8 @@ namespace BrassRay.RayTracer.IO
         public decimal Ior { get; set; }
     }
 
+    internal class NormalMaterialDto : MaterialDto { }
+
     internal class MaterialHolder
     {
         public string Name { get; set; }
@@ -51,5 +53,6 @@ namespace BrassRay.RayTracer.IO
         public ReflectMaterialDto ReflectMaterial { get; set; }
         public RefractMaterialDto RefractMaterial { get; set; }
         public SchlickMaterialDto SchlickMaterial { get; set; }
+        public NormalMaterialDto NormalMaterial { get; set; }
     }
 }

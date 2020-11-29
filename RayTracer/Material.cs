@@ -39,6 +39,15 @@ namespace BrassRay.RayTracer
     }
 
     /// <summary>
+    /// Visualize normals
+    /// </summary>
+    public class NormalMaterial : Material
+    {
+        protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, ShadeState state) =>
+            (p.Normal + Vector3.One) / 2.0f;
+    }
+
+    /// <summary>
     /// Stochastic diffuse
     /// </summary>
     public class LambertianMaterial : Material
@@ -48,7 +57,7 @@ namespace BrassRay.RayTracer
         protected override Vector3 ShadeCore(in Ray ray, Scene scene, in Intersection p, ShadeState state)
         {
             var from = p.Position + p.Normal * Utils.Epsilon;
-            var d = p.Normal + Utils.SphereRandom(state.SobolSequence, 0) * 2.0f;
+            var d = p.Normal + Vector3.Normalize(Utils.SphereRandom(state.SobolSequence, 0));
             state.Depth--;
             return scene.Shade(new Ray(from, d), state) * Color.Sample(p.TextureCoordinates);
         }

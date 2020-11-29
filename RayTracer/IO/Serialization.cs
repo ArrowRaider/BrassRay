@@ -292,12 +292,14 @@ namespace BrassRay.RayTracer.IO
                 CreateMap<DrawableDto, Drawable>()
                     .Include<InfinitePlaneDto, InfinitePlane>()
                     .Include<BoxDto, Box>()
-                    .Include<SphereDto, Sphere>();
+                    .Include<SphereDto, Sphere>()
+                    .Include<CylinderDto, Cylinder>();
                 CreateMap<InfinitePlaneDto, InfinitePlane>();
                 CreateMap<BoxDto, Box>();
                 CreateMap<SphereDto, Sphere>();
+                CreateMap<CylinderDto, Cylinder>();
                 CreateMap<DrawableHolder, DrawableDto>()
-                    .ConstructUsing(s => s.Box ?? s.InfinitePlane ?? (DrawableDto)s.Sphere);
+                    .ConstructUsing(s => s.Box ?? s.InfinitePlane ?? s.Sphere ?? (DrawableDto)s.Cylinder);
                 CreateMap<DrawableHolder, Drawable>()
                     .ConvertUsing((s, d, c) => c.Mapper.Map(c.Mapper.Map<DrawableDto>(s), d));
             }
@@ -313,16 +315,18 @@ namespace BrassRay.RayTracer.IO
                     .Include<LambertianMaterialDto, LambertianMaterial>()
                     .Include<ReflectMaterialDto, ReflectMaterial>()
                     .Include<RefractMaterialDto, RefractMaterial>()
-                    .Include<SchlickMaterialDto, SchlickMaterial>();
+                    .Include<SchlickMaterialDto, SchlickMaterial>()
+                    .Include<NormalMaterialDto, NormalMaterial>();
                 CreateMap<EmissiveMaterialDto, EmissiveMaterial>();
                 CreateMap<FastDiffuseMaterialDto, FastDiffuseMaterial>();
                 CreateMap<LambertianMaterialDto, LambertianMaterial>();
                 CreateMap<ReflectMaterialDto, ReflectMaterial>();
                 CreateMap<RefractMaterialDto, RefractMaterial>();
                 CreateMap<SchlickMaterialDto, SchlickMaterial>();
+                CreateMap<NormalMaterialDto, NormalMaterial>();
                 CreateMap<MaterialHolder, MaterialDto>().ConstructUsing(s =>
                     s.EmissiveMaterial ?? s.FastDiffuseMaterial ?? s.LambertianMaterial ??
-                    s.ReflectMaterial ?? s.RefractMaterial ?? (MaterialDto)s.SchlickMaterial);
+                    s.ReflectMaterial ?? s.RefractMaterial ?? s.SchlickMaterial ?? (MaterialDto)s.NormalMaterial);
                 CreateMap<MaterialHolder, Material>()
                     .ConvertUsing((s, d, c) => c.Mapper.Map(c.Mapper.Map<MaterialDto>(s), d));
             }

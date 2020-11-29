@@ -30,10 +30,18 @@ namespace BrassRay.RayTracer.IO
         public decimal Radius { get; set; }
     }
 
+    internal class CylinderDto : DrawableDto
+    {
+        public decimal Radius1 { get; set; }
+        public decimal Radius2 { get; set; }
+        public decimal Height { get; set; }
+    }
+
     internal class DrawableHolder
     {
         public InfinitePlaneDto InfinitePlane { get; set; }
         public BoxDto Box { get; set; }
         public SphereDto Sphere { get; set; }
+        public CylinderDto Cylinder { get; set; }
     }
 }
