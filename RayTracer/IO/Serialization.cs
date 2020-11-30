@@ -93,7 +93,7 @@ namespace BrassRay.RayTracer.IO
         private static ColorModel GetColorModel(Dictionary<string, object> dict)
         {
             if (!dict.TryGetValue(nameof(Scene.ColorModel), out var rawColorModel)) return new ColorModel();
-            var configuration = new MapperConfiguration(cfg => { });
+            var configuration = new MapperConfiguration(_ => { });
             var mapper = configuration.CreateMapper();
             return mapper.Map<ColorModel>(rawColorModel);
         }
@@ -293,13 +293,15 @@ namespace BrassRay.RayTracer.IO
                     .Include<InfinitePlaneDto, InfinitePlane>()
                     .Include<BoxDto, Box>()
                     .Include<SphereDto, Sphere>()
-                    .Include<CylinderDto, Cylinder>();
+                    .Include<CylinderDto, Cylinder>()
+                    .Include<TorusDto, Torus>();
                 CreateMap<InfinitePlaneDto, InfinitePlane>();
                 CreateMap<BoxDto, Box>();
                 CreateMap<SphereDto, Sphere>();
                 CreateMap<CylinderDto, Cylinder>();
+                CreateMap<TorusDto, Torus>();
                 CreateMap<DrawableHolder, DrawableDto>()
-                    .ConstructUsing(s => s.Box ?? s.InfinitePlane ?? s.Sphere ?? (DrawableDto)s.Cylinder);
+                    .ConstructUsing(s => s.Box ?? s.InfinitePlane ?? s.Sphere ?? s.Cylinder ?? (DrawableDto)s.Torus);
                 CreateMap<DrawableHolder, Drawable>()
                     .ConvertUsing((s, d, c) => c.Mapper.Map(c.Mapper.Map<DrawableDto>(s), d));
             }

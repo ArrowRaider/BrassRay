@@ -37,11 +37,18 @@ namespace BrassRay.RayTracer.IO
         public decimal Height { get; set; }
     }
 
+    internal class TorusDto : DrawableDto
+    {
+        public decimal OuterRadius { get; set; }
+        public decimal InnerRadius { get; set; }
+    }
+
     internal class DrawableHolder
     {
         public InfinitePlaneDto InfinitePlane { get; set; }
         public BoxDto Box { get; set; }
         public SphereDto Sphere { get; set; }
         public CylinderDto Cylinder { get; set; }
+        public TorusDto Torus { get; set; }
     }
 }
